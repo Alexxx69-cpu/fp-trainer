@@ -567,8 +567,14 @@
 
   <!-- Matching question area -->
   <div id="matchingArea" style="display:none">
+    <!-- Reference list of options -->
+    <div class="matching-card" style="margin-bottom:10px">
+      <div class="match-info">Варианты ответов (для справки):</div>
+      <div id="matchingRefList" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
+    </div>
+    <!-- Position selectors -->
     <div class="matching-card">
-      <div class="match-info" id="matchInfo">Установите соответствие — для каждого пункта выберите его порядковый номер:</div>
+      <div class="match-info">Для каждой позиции выберите номер правильного варианта:</div>
       <div class="matching-options" id="matchingOptions"></div>
     </div>
   </div>
@@ -761,54 +767,57 @@ function toggleOption(id, btn) {
 function renderMatchingQuestion(q, correctAns) {
   const container = document.getElementById('matchingOptions');
   container.innerHTML = '';
+  const refList = document.getElementById('matchingRefList');
+  refList.innerHTML = '';
 
-  // Parse matching pairs format: "1-3; 2-6; 3-9; ..."
+  // Parse pairs: left=position, right=correct option id
   const pairs = parseMatchingPairs(correctAns);
-  const leftIds = pairs.map(p => p.left);
-  // Possible right-side values are the unique right values from pairs
-  const rightNums = [...new Set(pairs.map(p => p.right))].sort((a,b) => a-b);
+  // Option numbers that appear as answers
+  const answerNums = [...new Set(pairs.map(p => p.right))].sort((a,b) => a-b);
 
+  // Build reference list of options
   q.options.forEach(opt => {
-    if (!leftIds.includes(opt.id)) return;
+    const item = document.createElement('div');
+    item.style.cssText = 'display:flex;align-items:flex-start;gap:10px;font-size:13px;';
+    item.innerHTML = `<span style="min-width:24px;height:24px;background:var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0">${opt.id}</span><span style="color:var(--text2);line-height:1.4">${opt.text}</span>`;
+    refList.appendChild(item);
+  });
+
+  // Build position rows: Позиция N → select option number
+  pairs.forEach(pair => {
     const row = document.createElement('div');
     row.className = 'matching-row';
+    row.style.cssText = 'align-items:center;padding:6px 0;';
 
-    const numEl = document.createElement('div');
-    numEl.className = 'match-num';
-    numEl.textContent = opt.id;
-
-    const leftText = document.createElement('span');
-    leftText.style.flex = '1';
-    leftText.style.fontSize = '13px';
-    leftText.style.color = 'var(--text)';
-    leftText.textContent = opt.text;
+    const posLabel = document.createElement('div');
+    posLabel.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;';
+    posLabel.innerHTML = `<div class="match-num" style="background:var(--surface2);color:var(--text2)">${pair.left}</div><span style="font-size:13px;color:var(--text2)">Позиция</span>`;
 
     const arrow = document.createElement('span');
     arrow.textContent = '→';
     arrow.style.color = 'var(--text2)';
+    arrow.style.margin = '0 8px';
 
     const sel = document.createElement('select');
     sel.className = 'match-select';
-    sel.dataset.left = opt.id;
+    sel.dataset.position = pair.left;
     const defOpt = document.createElement('option');
     defOpt.value = '';
-    defOpt.textContent = '— №';
+    defOpt.textContent = '—';
     sel.appendChild(defOpt);
-    // Show only numbers (1, 2, 3 ...) in the dropdown
-    rightNums.forEach(num => {
+    answerNums.forEach(num => {
       const o = document.createElement('option');
       o.value = num;
       o.textContent = num;
       sel.appendChild(o);
     });
     sel.addEventListener('change', () => {
-      matchingAnswers[opt.id] = parseInt(sel.value);
-      const allPairs = leftIds.every(lid => matchingAnswers[lid]);
-      document.getElementById('submitBtn').disabled = !allPairs;
+      matchingAnswers[pair.left] = parseInt(sel.value);
+      const allFilled = pairs.every(p => matchingAnswers[p.left]);
+      document.getElementById('submitBtn').disabled = !allFilled;
     });
 
-    row.appendChild(numEl);
-    row.appendChild(leftText);
+    row.appendChild(posLabel);
     row.appendChild(arrow);
     row.appendChild(sel);
     container.appendChild(row);
@@ -850,19 +859,33 @@ function submitAnswer() {
 
   if (isMatching) {
     const correctPairs = parseMatchingPairs(correctAns);
+    // pair.left = position, pair.right = correct option id
     isCorrect = correctPairs.every(p => matchingAnswers[p.left] === p.right);
+
+    // Color selects: green if correct, red if wrong
+    document.querySelectorAll('.match-select').forEach(sel => {
+      const pos = parseInt(sel.dataset.position);
+      const pair = correctPairs.find(p => p.left === pos);
+      if (!pair) return;
+      if (matchingAnswers[pos] === pair.right) {
+        sel.style.borderColor = 'var(--green)';
+        sel.style.background = 'rgba(46,204,113,0.1)';
+      } else {
+        sel.style.borderColor = 'var(--red)';
+        sel.style.background = 'rgba(231,76,60,0.1)';
+      }
+    });
 
     if (isCorrect) {
       fb.className = 'answer-feedback correct-fb';
-      fb.innerHTML = `<div class="fb-title">✅ Верно!</div><div class="fb-detail">Все соответствия установлены правильно.</div>`;
+      fb.innerHTML = `<div class="fb-title">✅ Верно!</div><div class="fb-detail">Все позиции расставлены правильно.</div>`;
     } else {
       fb.className = 'answer-feedback wrong-fb';
       let correctLines = correctPairs.map(p => {
-        const lt = q.options.find(o => o.id === p.left);
-        const rt = q.options.find(o => o.id === p.right);
-        return `<b>${p.left}.</b> ${lt ? lt.text : p.left} → <b>${p.right}.</b> ${rt ? rt.text : p.right}`;
+        const opt = q.options.find(o => o.id === p.right);
+        return `Позиция <b>${p.left}</b> → вариант <b>${p.right}</b>. ${opt ? opt.text : ''}`;
       }).join('<br>');
-      fb.innerHTML = `<div class="fb-title">❌ Неверно</div><div class="fb-detail">Правильное соответствие:<div class="correct-text">${correctLines}</div></div>`;
+      fb.innerHTML = `<div class="fb-title">❌ Неверно</div><div class="fb-detail">Правильный порядок:<div class="correct-text">${correctLines}</div></div>`;
     }
     userAnswers.push({ qNum: q.num, qText: q.text, correct: isCorrect });
   } else {
