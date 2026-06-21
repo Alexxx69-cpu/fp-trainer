@@ -48,7 +48,10 @@
     background: linear-gradient(135deg, var(--accent), var(--accent2));
     border-radius: 10px;
     display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
   }
   .header h1 {
     font-size: 18px;
@@ -529,7 +532,7 @@
 <body>
 
 <div class="header">
-  <div class="header-icon">🎯</div>
+  <div class="header-icon">ФП</div>
   <div>
     <h1>Тренажёр по ФП</h1>
     <p>Тесты теоретической подготовленности — 6 семестр</p>
@@ -560,7 +563,7 @@
     </div>
     <div class="tickets-grid" id="ticketsGrid"></div>
     <div style="text-align:center;margin-top:24px;">
-      <button class="btn btn-reset" onclick="resetProgress()">🗑 Сбросить весь прогресс</button>
+      <button class="btn btn-reset" onclick="resetProgress()">Сбросить весь прогресс</button>
     </div>
   </div>
 </div>
@@ -728,13 +731,13 @@ function renderQuestion() {
   const multiHint = document.getElementById('multiHint');
   if (isMatching) {
     multiHint.style.display = 'block';
-    multiHint.textContent = '🔗 Вопрос на соответствие — выберите пару для каждого пункта';
+    multiHint.textContent = 'Вопрос на соответствие — выберите пару для каждого пункта';
   } else if (isTextAnswer) {
     multiHint.style.display = 'block';
-    multiHint.textContent = '💡 Выберите любой вариант или нажмите «Ответить» — правильный ответ будет показан';
+    multiHint.textContent = 'Выберите любой вариант или нажмите «Ответить» — правильный ответ будет показан';
   } else if (correctIds.length > 1) {
     multiHint.style.display = 'block';
-    multiHint.textContent = '⚠️ В этом вопросе несколько правильных ответов (' + correctIds.length + ')';
+    multiHint.textContent = 'В этом вопросе несколько правильных ответов (' + correctIds.length + ')';
   } else {
     multiHint.style.display = 'none';
   }
@@ -897,14 +900,14 @@ function submitAnswer() {
 
     if (isCorrect) {
       fb.className = 'answer-feedback correct-fb';
-      fb.innerHTML = `<div class="fb-title">✅ Верно!</div><div class="fb-detail">Все позиции расставлены правильно.</div>`;
+      fb.innerHTML = `<div class="fb-title">Верно!</div><div class="fb-detail">Все позиции расставлены правильно.</div>`;
     } else {
       fb.className = 'answer-feedback wrong-fb';
       let correctLines = correctPairs.map(p => {
         const opt = q.options.find(o => o.id === p.right);
         return `Позиция <b>${p.left}</b> → вариант <b>${p.right}</b>. ${opt ? opt.text : ''}`;
       }).join('<br>');
-      fb.innerHTML = `<div class="fb-title">❌ Неверно</div><div class="fb-detail">Правильный порядок:<div class="correct-text">${correctLines}</div></div>`;
+      fb.innerHTML = `<div class="fb-title">Неверно</div><div class="fb-detail">Правильный порядок:<div class="correct-text">${correctLines}</div></div>`;
     }
     userAnswers.push({ qNum: q.num, qText: q.text, correct: isCorrect });
   } else {
@@ -914,7 +917,7 @@ function submitAnswer() {
     if (isTextAnswer) {
       // Text-based answer (e.g. "Гранатой огонь")
       fb.className = 'answer-feedback wrong-fb';
-      fb.innerHTML = `<div class="fb-title">📋 Правильный ответ</div><div class="fb-detail">Ответ на этот вопрос не выбирается из списка.<div class="correct-text"><b>${correctAns}</b></div></div>`;
+      fb.innerHTML = `<div class="fb-title">Правильный ответ</div><div class="fb-detail">Ответ на этот вопрос не выбирается из списка.<div class="correct-text"><b>${correctAns}</b></div></div>`;
       userAnswers.push({ qNum: q.num, qText: q.text, correct: false });
       // Don't try to match
       document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
@@ -935,14 +938,14 @@ function submitAnswer() {
 
       if (isCorrect) {
         fb.className = 'answer-feedback correct-fb';
-        fb.innerHTML = `<div class="fb-title">✅ Верно!</div>`;
+        fb.innerHTML = `<div class="fb-title">Верно!</div>`;
       } else {
         const correctTexts = correctIds.map(id => {
           const opt = q.options.find(o => o.id === id);
           return `<b>${id}.</b> ${opt ? opt.text : id}`;
         }).join('<br>');
         fb.className = 'answer-feedback wrong-fb';
-        fb.innerHTML = `<div class="fb-title">❌ Неверно</div><div class="fb-detail">Правильный ответ:<div class="correct-text">${correctTexts}</div></div>`;
+        fb.innerHTML = `<div class="fb-title">Неверно</div><div class="fb-detail">Правильный ответ:<div class="correct-text">${correctTexts}</div></div>`;
       }
       userAnswers.push({ qNum: q.num, qText: q.text, correct: isCorrect });
     }
@@ -977,7 +980,7 @@ function showResults() {
   document.getElementById('scorePct').textContent = pct + '%';
   document.getElementById('scoreRatio').textContent = score + '/' + total;
 
-  const grades = {excellent: 'Отлично! 🏆', good: 'Хорошо! 👍', satisf: 'Удовлетворительно', fail: 'Неудовлетворительно'};
+  const grades = {excellent: 'Отлично!', good: 'Хорошо!', satisf: 'Удовлетворительно', fail: 'Неудовлетворительно'};
   const cls = pct >= 90 ? 'excellent' : pct >= 70 ? 'good' : pct >= 50 ? 'satisf' : 'fail';
   document.getElementById('resultsTitle').textContent = grades[cls];
   document.getElementById('resultsSubtitle').textContent = `Вариант ${currentVariant} · Правильных ответов: ${score} из ${total}`;
