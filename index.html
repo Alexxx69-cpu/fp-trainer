@@ -371,13 +371,16 @@
     flex-shrink: 0;
   }
   .match-select {
-    flex: 1;
+    width: 80px;
+    flex: none;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
-    padding: 7px 12px;
+    padding: 7px 10px;
     border-radius: 8px;
-    font-size: 14px;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: center;
   }
   .match-select:focus { outline: none; border-color: var(--accent); }
   .match-select option { background: var(--surface); }
@@ -565,7 +568,7 @@
   <!-- Matching question area -->
   <div id="matchingArea" style="display:none">
     <div class="matching-card">
-      <div class="match-info">Установите соответствие — для каждого пункта слева выберите пункт справа:</div>
+      <div class="match-info" id="matchInfo">Установите соответствие — для каждого пункта выберите его порядковый номер:</div>
       <div class="matching-options" id="matchingOptions"></div>
     </div>
   </div>
@@ -762,8 +765,8 @@ function renderMatchingQuestion(q, correctAns) {
   // Parse matching pairs format: "1-3; 2-6; 3-9; ..."
   const pairs = parseMatchingPairs(correctAns);
   const leftIds = pairs.map(p => p.left);
-  const rightIds = pairs.map(p => p.right);
-  const allIds = q.options.map(o => o.id);
+  // Possible right-side values are the unique right values from pairs
+  const rightNums = [...new Set(pairs.map(p => p.right))].sort((a,b) => a-b);
 
   q.options.forEach(opt => {
     if (!leftIds.includes(opt.id)) return;
@@ -789,14 +792,13 @@ function renderMatchingQuestion(q, correctAns) {
     sel.dataset.left = opt.id;
     const defOpt = document.createElement('option');
     defOpt.value = '';
-    defOpt.textContent = '— выберите —';
+    defOpt.textContent = '— №';
     sel.appendChild(defOpt);
-    allIds.forEach(rid => {
-      const rightOpt = q.options.find(o => o.id === rid);
-      if (!rightOpt) return;
+    // Show only numbers (1, 2, 3 ...) in the dropdown
+    rightNums.forEach(num => {
       const o = document.createElement('option');
-      o.value = rid;
-      o.textContent = rid + '. ' + rightOpt.text;
+      o.value = num;
+      o.textContent = num;
       sel.appendChild(o);
     });
     sel.addEventListener('change', () => {
