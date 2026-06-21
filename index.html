@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Тренажёр ФП">
+<meta name="theme-color" content="#0f1117">
+<title>Тренажёр по ФП — 6 семестр</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3350;
+    --accent: #4f8ef7;
+    --accent2: #6ec6ff;
+    --green: #2ecc71;
+    --red: #e74c3c;
+    --yellow: #f39c12;
+    --text: #e8eaf0;
+    --text2: #9ba3c0;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-icon {
+    width: 40px; height: 40px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+  }
+  .header h1 {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .header p {
+    font-size: 12px;
+    color: var(--text2);
+  }
+  .back-btn {
+    margin-left: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all .2s;
+    display: none;
+  }
+  .back-btn:hover { background: var(--border); color: var(--text); }
+
+  /* ── SCREENS ── */
+  .screen { display: none; padding: 24px; max-width: 900px; margin: 0 auto; }
+  .screen.active { display: block; }
+
+  /* ── HOME SCREEN ── */
+  .home-title {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .home-title h2 {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 8px;
+  }
+  .home-title p {
+    color: var(--text2);
+    font-size: 15px;
+  }
+  .stats-bar {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .stat-card {
+    flex: 1; min-width: 120px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-card .stat-num {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--accent);
+  }
+  .stat-card .stat-label {
+    font-size: 12px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+  .tickets-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+  }
+  .ticket-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .ticket-btn:hover {
+    background: var(--surface2);
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(79,142,247,0.2);
+  }
+  .ticket-btn .t-num {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .ticket-btn .t-label {
+    font-size: 11px;
+    color: var(--text2);
+    margin-top: 4px;
+  }
+  .ticket-btn.done {
+    border-color: var(--green);
+  }
+  .ticket-btn.done .t-num { color: var(--green); }
+  .ticket-btn.partial {
+    border-color: var(--yellow);
+  }
+  .ticket-btn.partial .t-num { color: var(--yellow); }
+  .ticket-btn .progress-bar {
+    position: absolute;
+    bottom: 0; left: 0;
+    height: 3px;
+    background: var(--green);
+    transition: width .3s;
+  }
+
+  /* ── EXAM SCREEN ── */
+  .exam-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .exam-title { font-size: 16px; color: var(--text2); font-weight: 600; }
+  .exam-progress {
+    flex: 1;
+    min-width: 200px;
+  }
+  .progress-track {
+    background: var(--surface2);
+    border-radius: 999px;
+    height: 8px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 999px;
+    transition: width .4s ease;
+  }
+  .progress-text {
+    font-size: 13px;
+    color: var(--text2);
+    text-align: right;
+    margin-top: 4px;
+  }
+
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .question-badge {
+    display: inline-block;
+    background: var(--accent);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 999px;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+  }
+  .question-text {
+    font-size: 17px;
+    line-height: 1.6;
+    color: var(--text);
+    font-weight: 500;
+  }
+  .multi-hint {
+    margin-top: 12px;
+    font-size: 13px;
+    color: var(--yellow);
+    background: rgba(243,156,18,0.1);
+    border: 1px solid rgba(243,156,18,0.3);
+    border-radius: 8px;
+    padding: 8px 14px;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .option-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    text-align: left;
+    transition: all .15s;
+    width: 100%;
+    color: var(--text);
+    font-size: 15px;
+    line-height: 1.5;
+  }
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(79,142,247,0.08);
+  }
+  .option-btn .opt-num {
+    min-width: 28px; height: 28px;
+    background: var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all .15s;
+  }
+  .option-btn.selected {
+    border-color: var(--accent);
+    background: rgba(79,142,247,0.12);
+  }
+  .option-btn.selected .opt-num {
+    background: var(--accent);
+    color: #fff;
+  }
+  .option-btn.correct {
+    border-color: var(--green);
+    background: rgba(46,204,113,0.1);
+  }
+  .option-btn.correct .opt-num {
+    background: var(--green);
+    color: #fff;
+  }
+  .option-btn.wrong {
+    border-color: var(--red);
+    background: rgba(231,76,60,0.1);
+  }
+  .option-btn.wrong .opt-num {
+    background: var(--red);
+    color: #fff;
+  }
+  .option-btn:disabled { cursor: default; }
+
+  .answer-feedback {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    display: none;
+    animation: fadeIn .25s ease;
+  }
+  .answer-feedback.correct-fb {
+    border-color: var(--green);
+    background: rgba(46,204,113,0.07);
+  }
+  .answer-feedback.wrong-fb {
+    border-color: var(--red);
+    background: rgba(231,76,60,0.07);
+  }
+  .answer-feedback .fb-title {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .answer-feedback.correct-fb .fb-title { color: var(--green); }
+  .answer-feedback.wrong-fb .fb-title { color: var(--red); }
+  .answer-feedback .fb-detail {
+    font-size: 14px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .answer-feedback .correct-text {
+    color: var(--text);
+    font-weight: 500;
+    margin-top: 6px;
+    line-height: 1.7;
+  }
+
+  /* Matching type */
+  .matching-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 10px;
+  }
+  .matching-card .match-info {
+    font-size: 13px;
+    color: var(--text2);
+    margin-bottom: 10px;
+  }
+  .matching-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .matching-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    font-size: 14px;
+  }
+  .match-num {
+    min-width: 28px; height: 28px;
+    background: var(--accent);
+    color: #fff;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .match-select {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 12px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+  .match-select:focus { outline: none; border-color: var(--accent); }
+  .match-select option { background: var(--surface); }
+
+  .action-row {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+  }
+  .btn {
+    padding: 12px 28px;
+    border-radius: 10px;
+    border: none;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: #fff;
+  }
+  .btn-primary:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-primary:disabled {
+    opacity: .5; cursor: not-allowed; transform: none;
+  }
+  .btn-secondary {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+  .btn-secondary:hover { background: var(--border); }
+
+  /* ── RESULTS SCREEN ── */
+  .results-wrap {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+    padding: 40px 0;
+  }
+  .score-circle {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    margin: 0 auto 28px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 44px;
+    font-weight: 900;
+    border: 6px solid;
+    position: relative;
+  }
+  .score-circle .score-sub {
+    font-size: 15px;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+  .score-circle.excellent { border-color: var(--green); color: var(--green); }
+  .score-circle.good { border-color: #27ae60; color: #27ae60; }
+  .score-circle.satisf { border-color: var(--yellow); color: var(--yellow); }
+  .score-circle.fail { border-color: var(--red); color: var(--red); }
+  .results-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
+  .results-subtitle { color: var(--text2); margin-bottom: 32px; font-size: 15px; }
+
+  .results-breakdown {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 28px;
+    text-align: left;
+  }
+  .breakdown-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .breakdown-item:last-child { border-bottom: none; }
+  .breakdown-item .q-num { color: var(--text2); }
+  .breakdown-item .q-text { flex: 1; margin: 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+  .breakdown-item .q-result { font-weight: 700; font-size: 18px; }
+  .breakdown-item.ok .q-result { color: var(--green); }
+  .breakdown-item.fail .q-result { color: var(--red); }
+
+  .results-btns {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 999px; }
+
+  @media (max-width: 600px) {
+    .tickets-grid { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+    .question-card { padding: 18px; }
+    .question-text { font-size: 15px; }
+    .option-btn { padding: 14px 14px; font-size: 14px; }
+    .btn { padding: 14px 22px; font-size: 15px; }
+    .header { padding: 12px 16px; padding-top: max(12px, env(safe-area-inset-top)); }
+    .screen { padding: 16px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+    .home-title h2 { font-size: 22px; }
+    .exam-header { flex-wrap: wrap; gap: 10px; }
+    .results-wrap { padding: 24px 0; }
+    .score-circle { width: 130px; height: 130px; font-size: 36px; }
+    .action-row { justify-content: stretch; }
+    .action-row .btn { flex: 1; text-align: center; }
+  }
+  /* iOS tap highlight fix */
+  * { -webkit-tap-highlight-color: transparent; }
+  button, .ticket-btn, .option-btn {
+    -webkit-tap-highlight-color: rgba(79,142,247,0.2);
+    touch-action: manipulation;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🎯</div>
+  <div>
+    <h1>Тренажёр по ФП</h1>
+    <p>Тесты теоретической подготовленности — 6 семестр</p>
+  </div>
+  <button class="back-btn" id="backBtn" onclick="goHome()">← На главную</button>
+</div>
+
+<!-- ── HOME ── -->
+<div class="screen active" id="homeScreen">
+  <div style="padding: 8px 0 0;">
+    <div class="home-title">
+      <h2>Выберите вариант</h2>
+      <p>35 вариантов · по 10 вопросов в каждом · одиночный и множественный выбор</p>
+    </div>
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-num" id="statTotal">35</div>
+        <div class="stat-label">Всего вариантов</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statDone">0</div>
+        <div class="stat-label">Пройдено</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-num" id="statBestPct">—</div>
+        <div class="stat-label">Лучший результат</div>
+      </div>
+    </div>
+    <div class="tickets-grid" id="ticketsGrid"></div>
+  </div>
+</div>
+
+<!-- ── EXAM ── -->
+<div class="screen" id="examScreen">
+  <div class="exam-header">
+    <div class="exam-title" id="examTitle">Вариант 1</div>
+    <div class="exam-progress">
+      <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+      <div class="progress-text" id="progressText">0 / 10</div>
+    </div>
+  </div>
+
+  <div class="question-card" id="questionCard">
+    <div class="question-badge" id="questionBadge">ВОПРОС 1</div>
+    <div class="question-text" id="questionText"></div>
+    <div class="multi-hint" id="multiHint" style="display:none"></div>
+  </div>
+
+  <!-- Standard options -->
+  <div class="options-list" id="optionsList"></div>
+
+  <!-- Matching question area -->
+  <div id="matchingArea" style="display:none">
+    <div class="matching-card">
+      <div class="match-info">Установите соответствие — для каждого пункта слева выберите пункт справа:</div>
+      <div class="matching-options" id="matchingOptions"></div>
+    </div>
+  </div>
+
+  <!-- Feedback -->
+  <div class="answer-feedback" id="feedbackBox"></div>
+
+  <!-- Actions -->
+  <div class="action-row">
+    <button class="btn btn-primary" id="submitBtn" onclick="submitAnswer()" disabled>Ответить</button>
+    <button class="btn btn-primary" id="nextBtn" onclick="nextQuestion()" style="display:none">Следующий вопрос →</button>
+    <button class="btn btn-primary" id="finishBtn" onclick="showResults()" style="display:none">Завершить →</button>
+  </div>
+</div>
+
+<!-- ── RESULTS ── -->
+<div class="screen" id="resultsScreen">
+  <div class="results-wrap">
+    <div class="score-circle" id="scoreCircle">
+      <span id="scorePct">0%</span>
+      <span class="score-sub" id="scoreRatio"></span>
+    </div>
+    <div class="results-title" id="resultsTitle">Результат</div>
+    <div class="results-subtitle" id="resultsSubtitle"></div>
+    <div class="results-breakdown" id="resultsBreakdown"></div>
+    <div class="results-btns">
+      <button class="btn btn-secondary" onclick="goHome()">← Все варианты</button>
+      <button class="btn btn-primary" id="retryBtn" onclick="retryVariant()">Повторить вариант</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const EXAM_DATA = {"1": {"variant": 1, "questions": [{"num": 1, "text": "Что определяет Наставление по физической подготовке в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "порядок организации физической подготовки военнослужащих Вооружённых Сил Российской Федерации (ВС РФ), в том числе требования к уровню физической подготовленности военнослужащих ВС РФ"}, {"id": 2, "text": "систему физической подготовки в ВС РФ"}, {"id": 3, "text": "требования по уровню физической подготовки граждан РФ, иностранных граждан, поступающих на военную службу по контракту"}], "correct_answer": "1,3"}, {"num": 2, "text": "На что направлена физическая подготовка военнослужащих в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "на развитие физических качеств, на формирование военно-прикладных двигательных навыков"}, {"id": 2, "text": "на формирование  двигательных навыков"}, {"id": 3, "text": "на получение теоретических знаний у военнослужащих"}, {"id": 4, "text": "на формирование методических умений у военнослужащих"}], "correct_answer": "1"}, {"num": 3, "text": "Когда проводится физическая подготовка?", "options": [{"id": 1, "text": "мирное время"}, {"id": 2, "text": "военное время"}, {"id": 3, "text": "во время частичной мобилизации в РФ"}], "correct_answer": "1,2"}, {"num": 4, "text": "Какие элементы системы физической подготовки являются основными?", "options": [{"id": 1, "text": "цель, задачи, организация"}, {"id": 2, "text": "объект, предмет"}, {"id": 3, "text": "гипотеза"}, {"id": 4, "text": "результат физической подготовки"}], "correct_answer": "1,2,4"}, {"num": 5, "text": "Выберите -какое количество баллов надо получить по одному упражнению \nна оценки «отлично», «хорошо», « удовлетворительно», курсантам 3 курса.", "options": [{"id": 1, "text": "65,55,45"}, {"id": 2, "text": "70,40,35"}, {"id": 3, "text": "70,65,55"}, {"id": 4, "text": "75,70,65"}], "correct_answer": "3"}, {"num": 6, "text": "Назовите Пороговый минимум в одном упражнении \nдля курсантов 3 курса.", "options": [{"id": 1, "text": "32"}, {"id": 2, "text": "34"}, {"id": 3, "text": "38"}, {"id": 4, "text": "26"}], "correct_answer": "3"}, {"num": 7, "text": "Выберите номера упражнений, направленных на развитие\n физического качества сила.", "options": [{"id": 1, "text": "7,5,19,17,6"}, {"id": 2, "text": "18,21,53,67,2"}, {"id": 3, "text": "3,12,7,1,5"}, {"id": 4, "text": "2,25,41,4,21"}], "correct_answer": "3"}, {"num": 8, "text": "Организацию физической подготовки в военно-учебном заведении регламентируют ряд руководящих документов:", "options": [{"id": 1, "text": "Федеральный закон от 4 декабря 2007 г. № 329-ФЗ «О физической культуре и спорте в Российской Федерации»"}, {"id": 2, "text": "Федеральный закон от 4 декабря 2017 г. № 323-ФЗ «О физической культуре в России»"}, {"id": 3, "text": "Приказ МО РФ от 30 мая 2022 г. № 308-ФЗ «Об организации образовательной деятельности в федеральных государственных организациях, осуществляемых образовательную деятельность и находящихся в ведении Министерства обороны Российской Федерации»"}, {"id": 4, "text": "Приказ МО РФ от 20 апреля 2023 г. № 230 «Об утверждении Наставления по физической подготовке в Вооруженных Силах Российской Федерации»"}, {"id": 5, "text": "Приказ МО РФ от 1 мая 2020 г. № 370-ФЗ «Об организации образовательной деятельности в федеральных государственных организациях, осуществляемых образовательную деятельность и находящихся в ведении Министерства обороны Российской Федерации»"}], "correct_answer": "2,4,5"}, {"num": 9, "text": "Концептуальные основы системы физической подготовки войск являются:", "options": [{"id": 1, "text": "отражением  требований современного боя к психологическому состоянию личного состава, а также реальных возможностей обеспечения умственной готовности военнослужащих к повседневной деятельности"}, {"id": 2, "text": "субьективным отражением обьективных  требований современного боя к физическому состоянию личного состава, а также реальных возможностей обеспечения физической готовности военнослужащих к боевой деятельности"}, {"id": 3, "text": "образованная в соответствии с требованиями боевой деятельности к физическому состоянию личного состава система физической подготовки"}], "correct_answer": "3"}, {"num": 10, "text": "Целью физической подготовки является:", "options": [{"id": 1, "text": "обеспечение необходимого уровня физической подготовленности военнослужащих, для выполнения боевых и других задач в соответствии с их предназначением"}, {"id": 2, "text": "успешное выполнение военнослужащими своих служебных обязанностей"}, {"id": 3, "text": "успешное выполнение военнослужащими своих повседневных обязанностей"}], "correct_answer": "2"}]}, "2": {"variant": 2, "questions": [{"num": 1, "text": "Цель физической подготовки?", "options": [{"id": 1, "text": "успешное выполнение военнослужащими своих служебных обязанностей"}, {"id": 2, "text": "обеспечение необходимого уровня физической подготовленности военнослужащих для выполнения боевых и других задач в соответствии с их предназначением"}, {"id": 3, "text": "повышение устойчивости организма к воздействию неблагоприятных факторов военно-профессиональной деятельности и окружающей среды"}, {"id": 4, "text": "воспитание психической устойчивости и морально-волевых качеств"}], "correct_answer": "1"}, {"num": 2, "text": "Что является задачами физической подготовки?", "options": [{"id": 1, "text": "развитие физических качеств у военнослужащих"}, {"id": 2, "text": "формирование и совершенствование у военнослужащих военно-прикладных двигательных навыков"}, {"id": 3, "text": "получение теоретических знаний и формирование методических умений военнослужащих для проведения мероприятий физической подготовки"}, {"id": 4, "text": "развитие и совершенствование физических качеств (выносливости, силы, быстроты и ловкости) с учетом возрастных особенностей"}, {"id": 5, "text": "формирование навыков в передвижении по пересеченной местности в пешем порядке и на лыжах, в преодолении естественных и искусственных препятствий, рукопашном бою, военно-прикладном плавании"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Кто является объектом физической подготовки?", "options": [{"id": 1, "text": "должностные лица, осуществляющие организацию и проведение физической подготовки с военнослужащими"}, {"id": 2, "text": "военнослужащие, занимающиеся физической подготовкой"}, {"id": 3, "text": "командиры структурных подразделений"}], "correct_answer": "2"}, {"num": 4, "text": "Кто является субъектом физической подготовки?", "options": [{"id": 1, "text": "должностные лица, осуществляющие организацию и проведение физической подготовки с военнослужащими"}, {"id": 2, "text": "военнослужащие, занимающиеся физической подготовкой"}, {"id": 3, "text": "командиры структурных подразделений"}], "correct_answer": "1"}, {"num": 5, "text": "Выберите номера упражнений направленных на развитие физического качества быстрота.", "options": [{"id": 1, "text": "33, 30,35,31,34"}, {"id": 2, "text": "3,5,7,1,19"}, {"id": 3, "text": "20,19,21,17"}, {"id": 4, "text": "2,25,41,4,33"}], "correct_answer": "3"}, {"num": 6, "text": "Назовите номер упражнения – Жим штанги лежа.", "options": [{"id": 1, "text": "№14"}, {"id": 2, "text": "№15"}, {"id": 3, "text": "№16"}, {"id": 4, "text": "№17"}], "correct_answer": "1"}, {"num": 7, "text": "На какое физическое качество направленно упражнение №14.", "options": [{"id": 1, "text": "быстрота"}, {"id": 2, "text": "сила"}, {"id": 3, "text": "ловкость"}, {"id": 4, "text": "выносливость"}], "correct_answer": "2"}, {"num": 8, "text": "Задачами физической подготовки являются:", "options": [{"id": 1, "text": "развитие физических качеств у военнослужащих"}, {"id": 2, "text": "формирование и совершенствование у военнослужащих военно-прикладных двигательных навыков"}, {"id": 3, "text": "получение теоретических знаний и формирование методических умений военнослужащих для проведения мероприятий физической подготовки"}, {"id": 4, "text": "развитие и совершенствование физических качеств (выносливости, силы, быстроты и ловкости) с учетом возрастных особенностей"}], "correct_answer": "1,2,3"}, {"num": 9, "text": "Принцип прикладности выражает:", "options": [{"id": 1, "text": "основное предназначение физической подготовки войск – готовить военнослужащих к успешному выполнению учебно-боевых и боевых задач"}, {"id": 2, "text": "воспитания военнослужащих – созданием конкретных боевых ситуаций"}, {"id": 3, "text": "развитие военнослужащих – акцентированием совершенствования особо важных специальных качеств"}], "correct_answer": "1"}, {"num": 10, "text": "В системе управления физической подготовкой военнослужащих реализация принципа прикладности достигается:", "options": [{"id": 1, "text": "в руководстве – принятием глубоко продуманных и всесторонне обоснованных решений"}, {"id": 2, "text": "в организации – более полным учётом периодизации военно-профессиональной деятельности военнослужащих различных воинских специальностей; подчинением содержания занятий по физической подготовке содержанию занятий по тактической (тактико-специальной) подготовке"}, {"id": 3, "text": "в обеспечении – строительством и оборудованием таких спортивных объектов и мест для занятий физической подготовкой и спортом, которые позволяют в массовом порядке выполнять различные военно-прикладные упражнения из различных разделов физической подготовки"}, {"id": 4, "text": "в проведении – преимущественным проведением комплексных занятий и тренировок"}], "correct_answer": "4"}]}, "3": {"variant": 3, "questions": [{"num": 1, "text": "Чем определяется уровень физической подготовленности", "options": [{"id": 1, "text": "уровнем устойчивости организма к воздействию неблагоприятных факторов военно-профессиональной деятельности и окружающей среды"}, {"id": 2, "text": "степенью готовности военнослужащих к перенесению экстремальных физических и психических нагрузок в период подготовки и ведения боевых действий"}, {"id": 3, "text": "степенью развития физических качеств, сформированности военно-прикладных двигательных навыков"}, {"id": 4, "text": "достигнутым уровнем теоретических знаний и методических умений"}], "correct_answer": "3,4"}, {"num": 2, "text": "Кто является специалистам физической подготовки (ст.13)?", "options": [{"id": 1, "text": "военнослужащие, имеющие образование в области физической культуры и спорта"}, {"id": 2, "text": "лица гражданского персонала ВС РФ, имеющих образование в области физической культуры"}, {"id": 3, "text": "военнослужащие имеющую квалификацию и находящиеся на должностях, подлежащих замещению специалистами физической подготовки"}], "correct_answer": "3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «сила»?", "options": [{"id": 1, "text": "подтягивание на перекладине"}, {"id": 2, "text": "восхождение на платформу (тумбу)"}, {"id": 3, "text": "бег на 60 м с грузом"}, {"id": 4, "text": "толчок двух гирь"}, {"id": 5, "text": "подъем переворотом на перекладине"}, {"id": 6, "text": "комбинированное силовое упражнение на перекладине"}], "correct_answer": "1,4,5,6"}, {"num": 4, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «быстрота»?", "options": [{"id": 1, "text": "подтягивание на перекладине"}, {"id": 2, "text": "челночный бег 10х10 м"}, {"id": 3, "text": "бег на 100м"}, {"id": 4, "text": "бег на 1 км"}, {"id": 5, "text": "бег на 800 м с оружием"}], "correct_answer": "2,3"}, {"num": 5, "text": "Как называется общефизическое упражнение №14.", "options": [{"id": 1, "text": "Комплексное упражнение"}, {"id": 2, "text": "Жим штанги лежа"}, {"id": 3, "text": "Приседание со штангой"}, {"id": 4, "text": "Становая тяга со штангой"}], "correct_answer": "2"}, {"num": 6, "text": "По какой команде выполняется упражнение №14.", "options": [{"id": 1, "text": "«ВПЕРЕД»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}, {"id": 4, "text": "«ВНИМАНИЕ»,  «МАРШ»."}], "correct_answer": "2"}, {"num": 7, "text": "Как называется  общефизическое упражнение №2.", "options": [{"id": 1, "text": "отжимание"}, {"id": 2, "text": "подъем силой на перекладине"}, {"id": 3, "text": "наклоны туловища вперед согнув ноги"}, {"id": 4, "text": "вис на перекладине"}, {"id": 5, "text": "наклоны  туловища вперед"}], "correct_answer": "5"}, {"num": 8, "text": "Физические упражнения – это:", "options": [{"id": 1, "text": "движения, выполняемые с целью улучшения физического состояния военнослужащих"}, {"id": 2, "text": "движения на снарядах"}, {"id": 3, "text": "движения, выполняемые с целью поднятия физического здоровья военнослужащих"}], "correct_answer": "1"}, {"num": 9, "text": "Техникой физических упражнений называются:", "options": [{"id": 1, "text": "Способы выполнения упражнений, обеспечивающие их мощную эффективность"}, {"id": 2, "text": "Способы выполнения упражнений, обеспечивающие их наибольшую эффективность"}, {"id": 3, "text": "Способы выполнения упражнений, обеспечивающие их качественную эффективность"}], "correct_answer": "2"}, {"num": 10, "text": "Физическая культура это:", "options": [{"id": 1, "text": "сфера социально-культурной деятельности как совокупность видов спорта, сложившаяся в форме соревнований и специальной практики подготовки человека к ним"}, {"id": 2, "text": "процесс, направленный на воспитание личности, развитие физических возможностей человека, приобретение им умений и знаний в области физической культуры и спорта в целях формирования всесторонне развитого и физически здорового человека с высоким уровнем физической культуры"}, {"id": 3, "text": "часть культуры, представляющая собой совокупность ценностей, норм и знаний, создаваемых и используемых обществом в целях физического и интеллектуального развития способностей человека, совершенствования его двигательной активности и формирования здорового образа жизни, социальной адаптации путем физического воспитания, физической подготовки и физического развития"}], "correct_answer": "3"}]}, "4": {"variant": 4, "questions": [{"num": 1, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «выносливость»?", "options": [{"id": 1, "text": "марш-бросок на 5 км"}, {"id": 2, "text": "бег на 800 м с оружием"}, {"id": 3, "text": "плавание на 500 м вольным стилем"}, {"id": 4, "text": "лыжная гонка на 5 км"}, {"id": 5, "text": "комплексное упражнение на ловкость"}], "correct_answer": "3,4"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «ловкость»?", "options": [{"id": 1, "text": "комплексное упражнение на ловкость"}, {"id": 2, "text": "передвижение по узкой опоре"}, {"id": 3, "text": "комбинированное упражнение на перекладине"}, {"id": 4, "text": "марш-бросок на 5 км"}, {"id": 5, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «преодоление препятствий»?", "options": [{"id": 1, "text": "общее контрольное упражнение на единой полосе препятствий"}, {"id": 2, "text": "специальное контрольное упражнение для военнослужащих горных подразделений"}, {"id": 3, "text": "марш-бросок на 5 км"}, {"id": 4, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2"}, {"num": 4, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «ускоренное передвижение»?", "options": [{"id": 1, "text": "бег на 60 м с грузом"}, {"id": 2, "text": "бег в экипировке с автоматом"}, {"id": 3, "text": "челночный бег 10х10"}, {"id": 4, "text": "бег на 1 км"}, {"id": 5, "text": "бег на 5 км"}, {"id": 6, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2,6"}, {"num": 5, "text": "По какой команде выполняется упражнение №2.", "options": [{"id": 1, "text": "«ВПЕРЕД»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}, {"id": 4, "text": "«ВНИМАНИЕ»,  «МАРШ»."}], "correct_answer": "3"}, {"num": 6, "text": "Назовите номер упражнения – Наклоны туловища вперед.", "options": [{"id": 1, "text": "№3"}, {"id": 2, "text": "№67"}, {"id": 3, "text": "№7"}, {"id": 4, "text": "№2"}], "correct_answer": "4"}, {"num": 7, "text": "На какое физическое качество направленно упражнение №2.", "options": [{"id": 1, "text": "выносливость"}, {"id": 2, "text": "быстрота"}, {"id": 3, "text": "сила"}, {"id": 4, "text": "ловкость"}], "correct_answer": "3"}, {"num": 8, "text": "Из каких оценок складывается оценка курсанта образовательной организации по учебной дисциплине «Физическая подготовка»?", "options": [{"id": 1, "text": "оценки по теоретической подготовленности"}, {"id": 2, "text": "оценки по методической подготовленности"}, {"id": 3, "text": "оценки уровень физической подготовленности"}, {"id": 4, "text": "оценки по практической подготовленности"}], "correct_answer": "1,2,3"}, {"num": 9, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в  пяти упражнениях, чтобы получить оценку «отлично» за уровень физической подготовленности?", "options": [{"id": 1, "text": "360"}, {"id": 2, "text": "350"}, {"id": 3, "text": "380"}, {"id": 4, "text": "370"}], "correct_answer": "1"}, {"num": 10, "text": "Какой нормативно-правовой документ устанавливает правовые, организационные, экономические и социальные основы деятельности в области физической культуры и спорта в РФ?", "options": [{"id": 1, "text": "ФЗ от 04.12.2007 №329-ФЗ (ред. от 24.06.2023) «О физической культуре и спорте в РФ»"}, {"id": 2, "text": "Приказ МО РФ от 20.04.2023 №230 «Об утверждении Наставления по физической подготовке в ВС РФ»"}], "correct_answer": "1"}]}, "5": {"variant": 5, "questions": [{"num": 1, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «рукопашный бой»?", "options": [{"id": 1, "text": "комплекс приемов и действий рукопашного боя"}, {"id": 2, "text": "комплекс рукопашного боя на 8 счетов без оружия"}, {"id": 3, "text": "комплекс рукопашного боя начальный (РБ-Н)"}, {"id": 4, "text": "комплекс рукопашного боя с оружием на 8 счетов"}], "correct_answer": "1"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «военно-прикладное плавание»?", "options": [{"id": 1, "text": "плавание в обмундировании с оружием на 50 м"}, {"id": 2, "text": "плавание в обмундировании с оружием на 100 м"}, {"id": 3, "text": "ныряние в длину в форме"}, {"id": 4, "text": "ныряние в длину и глубину"}, {"id": 5, "text": "плавание на 500 м вольным стилем"}, {"id": 6, "text": "плавание на 100 м вольным стилем"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «специальные приемы и действия»?", "options": [{"id": 1, "text": "комплексное упражнение «квадрат»"}, {"id": 2, "text": "бег с преодолением полосы препятствий"}, {"id": 3, "text": "метание гранаты на точность"}, {"id": 4, "text": "комплекс приемов и действий рукопашного боя"}, {"id": 5, "text": "плавание в обмундировании на 100 м"}], "correct_answer": "1,2,3"}, {"num": 4, "text": "Что включат в себя организация физической подготовки?", "options": [{"id": 1, "text": "планирование и проведение мероприятий физической подготовки"}, {"id": 2, "text": "постановку задач исполнителям, организацию взаимодействия и всестороннее обеспечение их действий"}, {"id": 3, "text": "ведение учета физической подготовки"}, {"id": 4, "text": "контроль за ходом выполнения поставленных задач"}, {"id": 5, "text": "медицинское обеспечение"}, {"id": 6, "text": "подготовку должностных лиц, осуществляющих проведение физической подготовки с военнослужащими"}, {"id": 7, "text": "представление отчетности"}, {"id": 8, "text": "анализ результатов и подведение итогов"}, {"id": 9, "text": "осуществление контроля проведения мероприятий физической подготовки в подразделениях и оказание помощи руководителям занятий по физической подготовке"}], "correct_answer": "1,3,6,9"}, {"num": 5, "text": "Назовите номер упражнения – Прыжки на скакалке", "options": [{"id": 1, "text": "№19"}, {"id": 2, "text": "№33"}, {"id": 3, "text": "№31"}, {"id": 4, "text": "№ 41"}], "correct_answer": "3"}, {"num": 6, "text": "Как называется упражнение №31.", "options": [{"id": 1, "text": "восхождение на платформу (тумбу)"}, {"id": 2, "text": "комбинированное упражнение на брусьях"}, {"id": 3, "text": "прыжки со скакалкой"}, {"id": 4, "text": "комплексное упражнение на ловкость"}], "correct_answer": "3"}, {"num": 7, "text": "По какой команде выполняется упражнение №31.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "3"}, {"num": 8, "text": "Циклические упражнения представляют собой:", "options": [{"id": 1, "text": "цепь периодически повторяющихся действий, при выполнении которых тело человека и его части каждый раз оказываются в разных исходных положениях (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}, {"id": 2, "text": "двигательные действия, при выполнении которых отсутствует смежная повторяемость стандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}, {"id": 3, "text": "цепь периодически повторяющихся движений или действий, при выполнении которых тело человека и его части каждый раз оказываются в одном и том же исходном положении (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}], "correct_answer": "2"}, {"num": 9, "text": "Ациклические упражнения –  это", "options": [{"id": 1, "text": "цепь периодически повторяющихся движений или действий, при выполнении которых тело человека и его части каждый раз оказываются в одном и том же исходном положении (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}, {"id": 2, "text": "такие двигательные действия, при выполнении которых отсутствует смежная повторяемость стандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}, {"id": 3, "text": "такие двигательные действия, при выполнении которых отсутствует нужная повторяемость нестандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}], "correct_answer": "2"}, {"num": 10, "text": "Назовите какое минимальное количество баллов, необходимо набрать в одном упражнении курсанту 3 курса , чтобы не получить оценку «неудовлетворительно» за уровень физической подготовленности?", "options": [{"id": 1, "text": "38"}, {"id": 2, "text": "36"}, {"id": 3, "text": "34"}, {"id": 4, "text": "32"}], "correct_answer": "1"}]}, "6": {"variant": 6, "questions": [{"num": 1, "text": "Какой приказ МО РФ определяет порядок \nорганизации физической подготовки военнослужащих ВС РФ?", "options": [{"id": 1, "text": "Приказ Министра обороны Российской Федерации № 520 от 2017 г."}, {"id": 2, "text": "Приказ Министра обороны Российской Федерации № 385 от 2005 г."}, {"id": 3, "text": "Приказ Министра обороны Российской Федерации № 230 от 2023 г."}], "correct_answer": "3"}, {"num": 2, "text": "Укажите продолжительность учебных занятий по физической подготовке для курсантов, проходящих обучение в образовательных организациях высшего образования МО РФ в соответствии с НФП-2023:", "options": [{"id": 1, "text": "45 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 2, "text": "не менее 4 учебных часов в неделю"}, {"id": 3, "text": "4 академических часа в неделю"}, {"id": 4, "text": "4 академических часа в неделю, из которых 2 академических часа – на аудиторное занятие, 2 – на самостоятельную работу"}], "correct_answer": "3"}, {"num": 3, "text": "Укажите продолжительность спортивно-массовой работы для курсантов, проходящих обучение в образовательных организациях высшего образования \nМО РФ в соответствии с НФП-2023:", "options": [{"id": 1, "text": "не менее 4 учебных часов в неделю"}, {"id": 2, "text": "2 раза в неделю по 50 минут в рабочие дни в свободное от занятий время и не менее 3-х часов в выходные и нерабочие праздничные дни"}, {"id": 3, "text": "не менее 3-х часов в выходные и нерабочие праздничные дни"}], "correct_answer": "2"}, {"num": 4, "text": "Определите категории военнослужащих в зависимости от особенностей \nвоенно-профессиональной деятельности \nв соответствии с НФП-2023:", "options": [{"id": 1, "text": "военнослужащие, проходящие военную службу в органах военного управления, управлениях соединений, управлениях воинских частей, управлениях батальонов (им равных), научных организациях Вооруженных Сил (военных учебных центрах), военных представительствах, главных центрах (центрах, арсеналах, базах, отделах) видов обеспечения, центрах управления, лабораториях специального контроля, вузах на должностях постоянного и переменного состава (за исключением курсантов), учебных воинских частях на должностях постоянного состава, на пунктах отбора на военную службу по контракту, в военных комиссариатах, медицинских организациях Вооруженных Сил, военных оркестрах (ансамблях), фельдъегерской почтовой службе"}, {"id": 2, "text": "военнослужащие, проходящие военную службу в подразделениях: топогеодезических, метеорологических (гидрометеорологических), материально-технического обеспечения, медицинских, предупреждения о ракетном нападении и разведки космической обстановки, испытательных центров (полигонов), аэродромно-технического обеспечения, переменный состав учебных воинских частей"}, {"id": 3, "text": "военнослужащие, проходящие военную службу в основных подразделениях и подразделениях обеспечения воинских частей видов Вооруженных Сил, родов войск Вооруженных Сил и не входящих в них, кроме военнослужащих подразделений, указанных в категориях № 2 и 3"}, {"id": 4, "text": "военнослужащие подразделений, не входящих в категории № 1 и 2"}], "correct_answer": "1-3; 2-2\n3-1; 4-3"}, {"num": 5, "text": "Как называется  общефизическое упражнение №45.", "options": [{"id": 1, "text": "Общее контрольное упражнение на единой полосе препятствий"}, {"id": 2, "text": "Марш бросок на лыжах на 5 км"}, {"id": 3, "text": "Марш бросок на 5 км"}, {"id": 4, "text": "Бег на 800 м с оружием"}], "correct_answer": "1"}, {"num": 6, "text": "По какой команде выполняется упражнение №45.", "options": [{"id": 1, "text": "«ЗАНЯТЬ МЕСТА», «НА СТАРТ», «МАРШ»"}, {"id": 2, "text": "« К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "3"}, {"num": 7, "text": "Дистанция упражнения-№45.", "options": [{"id": 1, "text": "200 м"}, {"id": 2, "text": "800 м"}, {"id": 3, "text": "5 км"}, {"id": 4, "text": "400 м"}], "correct_answer": "4"}, {"num": 8, "text": "Для чего предназначена спортивно массовая работа ?", "options": [{"id": 1, "text": "для организации и проведения физкультурно-спортивных мероприятий, повышения физической подготовленности, организации досуга и пропаганды здорового образа жизни"}, {"id": 2, "text": "для проведения с военнослужащими массовых спортивных мероприятий и пропаганды здорового образа жизни"}], "correct_answer": "1"}, {"num": 9, "text": "Какое количество баллов необходимо набрать курсанту 3 курса  в пяти упражнениях, чтобы получить оценку «отлично» за уровень физической подготовленности?", "options": [{"id": 1, "text": "360"}, {"id": 2, "text": "350"}, {"id": 3, "text": "380"}, {"id": 4, "text": "370"}], "correct_answer": "1"}, {"num": 10, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в пяти упражнениях, чтобы получить второй квалификационный уровень физической подготовленности?", "options": [{"id": 1, "text": "370"}, {"id": 2, "text": "360"}, {"id": 3, "text": "350"}, {"id": 4, "text": "340"}], "correct_answer": "1"}]}, "7": {"variant": 7, "questions": [{"num": 1, "text": "Для проверки уровня физической подготовленности военнослужащие мужского пола распределяются на возрастные группы \n(указать соответствие для всех вариантов ответа):", "options": [{"id": 1, "text": "25-29 лет"}, {"id": 2, "text": "до 25 лет"}, {"id": 3, "text": "35-39 лет"}, {"id": 4, "text": "30-34 года"}, {"id": 5, "text": "40-44 года"}, {"id": 6, "text": "45-49 лет"}, {"id": 7, "text": "50-54 года"}, {"id": 8, "text": "55-59 лет"}, {"id": 9, "text": "60 лет и старше"}], "correct_answer": "1-2; 2-1\n3-4; 4-3\n5-5; 6-6\n7-7; 8-8\n9-9"}, {"num": 2, "text": "Для оценки уровня физической подготовленности курсанты выполняют физические упражнения, входящие в программы обучения, при этом количество физических упражнений должно соответствовать \n(указать соответствие для всех вариантов ответа):", "options": [{"id": 1, "text": "4 физических упражнения, из которых 3ОФУ (на быстроту или ловкость, силу, выносливость) и 1 СФУ"}, {"id": 2, "text": "5 физических упражнений, из которых 3ОФУ (на ловкость, силу, выносливость или быстроту, силу ловкость) и 2 СФУ"}, {"id": 3, "text": "3 физических упражнения, из которых 2 ОФУ (на быстроту или ловкость, силу либо на быстроту или ловкость, выносливость либо на силу, выносливость) и 1 СФУ"}, {"id": 4, "text": "2 физических упражнения, все ОФУ (на быстроту, или ловкость, или силу, выносливость)"}], "correct_answer": "2"}, {"num": 3, "text": "Для проверки уровня физической подготовленности профессорско-преподавательским составом в период промежуточной аттестации составляется:", "options": [{"id": 1, "text": "программа проведения практической части проведения зачета/экзамена"}, {"id": 2, "text": "контрольно-проверочные комплексы"}, {"id": 3, "text": "приказ проведения контрольной проверки курсантов"}], "correct_answer": "2"}, {"num": 4, "text": "Назовите номер упражнения – метание гранат на точность.", "options": [{"id": 1, "text": "№69"}, {"id": 2, "text": "№31"}, {"id": 3, "text": "№68"}, {"id": 4, "text": "№70"}], "correct_answer": "1"}, {"num": 5, "text": "Как называется упражнение № 69.", "options": [{"id": 1, "text": "Метание гранат на точность"}, {"id": 2, "text": "Вис на перекладине"}, {"id": 3, "text": "Поднимание ящика для боеприпасов"}, {"id": 4, "text": "Упор лежа на предплечьях"}], "correct_answer": "1"}, {"num": 6, "text": "По какой команде выполняется упражнение №69.", "options": [{"id": 1, "text": "«ЗАНЯТЬ МЕСТА», «НА СТАРТ», «МАРШ»"}, {"id": 2, "text": "« К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "Гранатой огонь"}, {"num": 7, "text": "Назовите номер упражнения – Приседание со штангой.", "options": [{"id": 1, "text": "№16"}, {"id": 2, "text": "№21"}, {"id": 3, "text": "№35"}, {"id": 4, "text": "№69"}], "correct_answer": "1"}, {"num": 8, "text": "Как называется  упражнение №25.", "options": [{"id": 1, "text": "Бег на 3 км"}, {"id": 2, "text": "Бег на 1 км"}, {"id": 3, "text": "Лыжная гонка на 5 км"}, {"id": 4, "text": "Бег на 400 м"}], "correct_answer": "1"}, {"num": 9, "text": "Какое количество баллов необходимо набрать курсанту 3 курса  в трех упражнениях, чтобы получить оценку «хорошо» за уровень физической подготовленности?", "options": [{"id": 1, "text": "165"}, {"id": 2, "text": "120"}, {"id": 3, "text": "195"}, {"id": 4, "text": "210"}], "correct_answer": "3"}, {"num": 10, "text": "По каким показателям проверяется уровень методической подготовленности?", "options": [{"id": 1, "text": "отлично» - если выполнено 6 показателей методического задания; «хорошо» - если выполнено 5 показателя методического задания; «удовлетворительно» - если выполнено 4 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}, {"id": 2, "text": "«отлично» - если выполнено 4 показателей методического задания; «хорошо» - если выполнено 3 показателя методического задания; «удовлетворительно» - если выполнено 2 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}, {"id": 3, "text": "«отлично» - если выполнено 5 показателей методического задания; «хорошо» - если выполнено 4 показателя методического задания; «удовлетворительно» - если выполнено 3 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}], "correct_answer": "3"}]}, "8": {"variant": 8, "questions": [{"num": 1, "text": "Уровень развития каждого физического качества и формирования военно-прикладного двигательного навыка проверяется по:", "options": [{"id": 1, "text": "2 общефизическим упражнениям"}, {"id": 2, "text": "1 физическому упражнению"}, {"id": 3, "text": "3 специальным физическим упражнениям"}], "correct_answer": "1"}, {"num": 2, "text": "В каких случаях в контрольно-проверочный комплекс (КПК) не включается упражнения на проверку уровня развития выносливости:", "options": [{"id": 1, "text": "если в КПК включены следующие общие физические упражнения: бег на 100 м; челночный бег 10х10 м"}, {"id": 2, "text": "если в КПК включены следующие специальные физические упражнения: марш-бросок на 5 км; марш-бросок на лыжах на 5 км"}, {"id": 3, "text": "если в КПК включены следующие специальные физические упражнения: бег на 3 км со стрельбой и метанием гранат; преодоление полосы препятствий"}], "correct_answer": "2,3"}, {"num": 3, "text": "Проверка уровня физической подготовленности военнослужащего проводится:", "options": [{"id": 1, "text": "1 день"}, {"id": 2, "text": "4 дня"}, {"id": 3, "text": "3 дня"}, {"id": 4, "text": "до 2 дней"}], "correct_answer": "4"}, {"num": 4, "text": "Укажите последовательность выполнения физических упражнений на проверке:", "options": [{"id": 1, "text": "упражнения на силу"}, {"id": 2, "text": "специальные приемы и действия, метание гранаты"}, {"id": 3, "text": "комплексные упражнения"}, {"id": 4, "text": "военно-прикладное плавание"}, {"id": 5, "text": "упражнения на выносливость"}, {"id": 6, "text": "комплексы рукопашного боя"}, {"id": 7, "text": "упражнения на быстроту"}, {"id": 8, "text": "марш-броски, марш-броски на лыжах"}, {"id": 9, "text": "упражнения на ловкость"}], "correct_answer": "1-3; 2-6\n3-9; 4-8\n5-4; 6-5\n7-2; 8-7\n9-1"}, {"num": 5, "text": "Назовите номер упражнения – Комбинированное силовое упражнение на перекладине.", "options": [{"id": 1, "text": "№5"}, {"id": 2, "text": "№19"}, {"id": 3, "text": "№2"}, {"id": 4, "text": "№7"}], "correct_answer": "4"}, {"num": 6, "text": "Как называется упражнение №7.", "options": [{"id": 1, "text": "вис на перекладине"}, {"id": 2, "text": "подьем силой на перекладине"}, {"id": 3, "text": "сгибание и разгибание рук в упоре лежа"}, {"id": 4, "text": "комбинированное силовое упражнение на перекладине"}], "correct_answer": "4"}, {"num": 7, "text": "По какой команде выполняется упражнение №7.", "options": [{"id": 1, "text": "«ЗАНЯТЬ МЕСТА», «НА СТАРТ», «МАРШ»"}, {"id": 2, "text": "« К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "2"}, {"num": 8, "text": "Что включает в себя спортивно массовая работа в воинской части (вузе)?", "options": [{"id": 1, "text": "соревнования по военно-прикладным и другим видам спорта и учебно-тренировочные сборы по подготовке сборных команд по видам спорта к соревнованиям"}, {"id": 2, "text": "тренировка в выполнении физических упражнений Наставления, входящих в программу обучения"}, {"id": 3, "text": "соревнования по военно-прикладным и другим видам спорта между военнослужащими; \nучебно-тренировочные занятия с военнослужащими по подготовке к соревнованиям,"}], "correct_answer": "1"}, {"num": 9, "text": "На что направлены учебно-тренировочные занятия в сборных командах воинской части, вузах?", "options": [{"id": 1, "text": "учебно-тренировочные занятия с военнослужащими по подготовке к соревнованиям, проводимым по плану старшего командира (начальника);"}, {"id": 2, "text": "тренировка в выполнении физических упражнений Наставления, входящих в программу обучения;"}, {"id": 3, "text": "учебно-тренировочные сборы по подготовке сборных команд по видам спорта к соревнованиям, проводимым по плану старшего командира (начальника)"}], "correct_answer": "1"}, {"num": 10, "text": "Что является основными видами спортивно массовой работы?", "options": [{"id": 1, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы.\nФизкультурные праздники и показательные спортивные выступления. Военно-спортивный комплекс."}, {"id": 2, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы.\n Военно-спортивный комплекс."}, {"id": 3, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы."}], "correct_answer": "1"}]}, "9": {"variant": 9, "questions": [{"num": 1, "text": "Укажите последовательность выполнения физических упражнений при выполнении общеразвивающих упражнений на месте:", "options": [{"id": 1, "text": "упражнения для мышц рук и плечевого пояса"}, {"id": 2, "text": "упражнения для мышц ног"}, {"id": 3, "text": "упражнения для мышц всего тела"}, {"id": 4, "text": "подтягивающие упражнения"}, {"id": 5, "text": "упражнения в прыжках"}], "correct_answer": "1-2; 2-3\n3-4; 4-1\n5-5;"}, {"num": 2, "text": "В каких случаях преподаватель (руководитель занятия) разучивает физическое упражнение с помощью подготовительных упражнений?", "options": [{"id": 1, "text": "если физическое упражнение несложное, доступное для обучаемых или его выполнение по элементам невозможно"}, {"id": 2, "text": "если физическое упражнение сложное и его можно разделить на отдельные элементы"}, {"id": 3, "text": "если физическое упражнение сложное и его можно выполнить с остановками"}, {"id": 4, "text": "если в целом из-за трудности его выполнить нельзя, а разделить на части невозможно"}], "correct_answer": "4"}, {"num": 3, "text": "В каких случаях преподаватель (руководитель занятия) разучивает физическое упражнение в целом?", "options": [{"id": 1, "text": "если физическое упражнение несложное, доступное для обучаемых или его выполнение по элементам невозможно"}, {"id": 2, "text": "если физическое упражнение сложное и его можно разделить на отдельные элементы"}, {"id": 3, "text": "если физическое упражнение сложное и его можно выполнить с остановками"}, {"id": 4, "text": "если в целом из-за трудности его выполнить нельзя, а разделить на части невозможно"}], "correct_answer": "1"}, {"num": 4, "text": "Укажите продолжительность УФЗ для военнослужащих, проходящих военную службу по призыву и проходящих обучение в военно-учебных заведениях на воинских должностях курсантов в соответствии с НФП-2023?", "options": [{"id": 1, "text": "30 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 2, "text": "45 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 3, "text": "30-50 минут ежедневно, кроме выходных и нерабочих праздничных дней"}], "correct_answer": "1"}, {"num": 5, "text": "По какой команде выполняется упражнение №17.", "options": [{"id": 1, "text": "«НА СТАРТ», « МАРШ»"}, {"id": 2, "text": "«ВПЕРЕД»"}, {"id": 3, "text": "«НА СТАРТ», « ВНИМАНИЕ», « МАРШ»"}, {"id": 4, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "3"}, {"num": 6, "text": "Как называется   упражнение №17.", "options": [{"id": 1, "text": "подъем силой на перекладине"}, {"id": 2, "text": "Бег на 400 м"}, {"id": 3, "text": "комбинированное силовое упражнение на перекладине"}, {"id": 4, "text": "бег на 60 м"}], "correct_answer": "4"}, {"num": 7, "text": "Как называется  общефизическое упражнение №28.", "options": [{"id": 1, "text": "плавание на 500 м вольным стилем"}, {"id": 2, "text": "комплексное упражнение на силу"}, {"id": 3, "text": "челночный бег 10×10 м"}, {"id": 4, "text": "комплексное упражнение на ловкость"}], "correct_answer": "1"}, {"num": 8, "text": "Смотры спортивно массовой работы воинской части, вузах это:", "options": [{"id": 1, "text": "комплексные заочные соревнования, в которых по объективным и одинаковым для всех показателям сравнивается качество спортивной работы  в военных учебных заведениях"}, {"id": 2, "text": "это  соревнования, в которых по объективным и одинаковым для всех показателям сравнивается качество спортивной работы  в военных учебных заведениях"}, {"id": 3, "text": "это комплексные заочные соревнования, в которых сравнивается качество спортивной работы  в военных учебных заведениях"}], "correct_answer": "1"}, {"num": 9, "text": "К основным элементам здорового образа жизни относятся:", "options": [{"id": 1, "text": "режим труда и отдыха"}, {"id": 2, "text": "сон"}, {"id": 3, "text": "питание"}, {"id": 4, "text": "двигательная активность"}, {"id": 5, "text": "личная гигиена и закаливание"}, {"id": 6, "text": "профилактика вредных привычек"}], "correct_answer": "1,3,5,6"}, {"num": 10, "text": "К принципам физического воспитания относятся:", "options": [{"id": 1, "text": "Философские принципы"}, {"id": 2, "text": "Основополагающие принципы физической культуры"}, {"id": 3, "text": "Вспомогательные принципы физической культуры"}, {"id": 4, "text": "Общепедагогические принципы физического воспитания"}, {"id": 5, "text": "Специфические принципы, выражающие закономерности методики развития физических качеств и двигательных способностей"}], "correct_answer": "4,5"}]}, "10": {"variant": 10, "questions": [{"num": 1, "text": "Цель физической подготовки?", "options": [{"id": 1, "text": "успешное выполнение военнослужащими своих служебных обязанностей"}, {"id": 2, "text": "обеспечение необходимого уровня физической подготовленности военнослужащих для выполнения боевых и других задач в соответствии с их предназначением"}, {"id": 3, "text": "повышение устойчивости организма к воздействию неблагоприятных факторов военно-профессиональной деятельности и окружающей среды"}, {"id": 4, "text": "воспитание психической устойчивости и морально-волевых качеств"}], "correct_answer": "1"}, {"num": 2, "text": "Что является задачами физической подготовки?", "options": [{"id": 1, "text": "развитие физических качеств у военнослужащих"}, {"id": 2, "text": "формирование и совершенствование у военнослужащих военно-прикладных двигательных навыков"}, {"id": 3, "text": "получение теоретических знаний и формирование методических умений военнослужащих для проведения мероприятий физической подготовки"}, {"id": 4, "text": "развитие и совершенствование физических качеств (выносливости, силы, быстроты и ловкости) с учетом возрастных особенностей"}, {"id": 5, "text": "формирование навыков в передвижении по пересеченной местности в пешем порядке и на лыжах, в преодолении естественных и искусственных препятствий, рукопашном бою, военно-прикладном плавании"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Кто является объектом физической подготовки?", "options": [{"id": 1, "text": "должностные лица, осуществляющие организацию и проведение физической подготовки с военнослужащими"}, {"id": 2, "text": "военнослужащие, занимающиеся физической подготовкой"}, {"id": 3, "text": "командиры структурных подразделений"}], "correct_answer": "2"}, {"num": 4, "text": "Кто является субъектом физической подготовки?", "options": [{"id": 1, "text": "должностные лица, осуществляющие организацию и проведение физической подготовки с военнослужащими"}, {"id": 2, "text": "военнослужащие, занимающиеся физической подготовкой"}, {"id": 3, "text": "командиры структурных подразделений"}], "correct_answer": "1"}, {"num": 5, "text": "Назовите номер упражнения – Плавание на 50 м вольным стилем.", "options": [{"id": 1, "text": "№1"}, {"id": 2, "text": "№21"}, {"id": 3, "text": "№18"}, {"id": 4, "text": "№20"}], "correct_answer": "4"}, {"num": 6, "text": "Как называется  общефизическое упражнение №28.", "options": [{"id": 1, "text": "плавание на 500 м вольным стилем"}, {"id": 2, "text": "комплексное упражнение на силу"}, {"id": 3, "text": "челночный бег 10×10 м"}, {"id": 4, "text": "комплексное упражнение на ловкость"}], "correct_answer": "1"}, {"num": 7, "text": "По какой команде выполняется упражнение №17.", "options": [{"id": 1, "text": "«НА СТАРТ», « МАРШ»"}, {"id": 2, "text": "«ВПЕРЕД»"}, {"id": 3, "text": "«НА СТАРТ», « ВНИМАНИЕ», « МАРШ»"}, {"id": 4, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "3"}, {"num": 8, "text": "Физические качества – это:", "options": [{"id": 1, "text": "свойства организма обеспечивающие поступательную деятельность"}, {"id": 2, "text": "свойства организма обеспечивающие двигательную деятельность"}, {"id": 3, "text": "свойства организма обеспечивающие энергетическую деятельность"}], "correct_answer": "2"}, {"num": 9, "text": "Выносливость – это:", "options": [{"id": 1, "text": "это способность организма целесообразно согласовывать движения, организовывать их в единое целое, координировать движения с учетом освоенного действия или переключать их в соответствии с меняющимися условиями"}, {"id": 2, "text": "способность организма продолжительное время выполнять работу на высоком уровне без снижения ее эффективности"}, {"id": 3, "text": "это способность организма преодолевать внешнее сопротивление или противодействовать ему за счет мышечных усилий"}, {"id": 4, "text": "это способность организма совершать двигательные действия в минимальное время"}], "correct_answer": "2"}, {"num": 10, "text": "Сила – это:", "options": [{"id": 1, "text": "это способность организма целесообразно согласовывать движения, организовывать их в единое целое, координировать движения с учетом освоенного действия или переключать их в соответствии с меняющимися условиями"}, {"id": 2, "text": "способность организма продолжительное время выполнять работу на высоком уровне без снижения ее эффективности"}, {"id": 3, "text": "это способность организма преодолевать внешнее сопротивление или противодействовать ему за счет мышечных усилий"}, {"id": 4, "text": "это способность организма совершать двигательные действия в минимальное время"}], "correct_answer": "3"}]}, "11": {"variant": 11, "questions": [{"num": 1, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «рукопашный бой»?", "options": [{"id": 1, "text": "комплекс приемов и действий рукопашного боя"}, {"id": 2, "text": "комплекс рукопашного боя на 8 счетов без оружия"}, {"id": 3, "text": "комплекс рукопашного боя начальный (РБ-Н)"}, {"id": 4, "text": "комплекс рукопашного боя с оружием на 8 счетов"}], "correct_answer": "1"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «военно-прикладное плавание»?", "options": [{"id": 1, "text": "плавание в обмундировании с оружием на 50 м"}, {"id": 2, "text": "плавание в обмундировании с оружием на 100 м"}, {"id": 3, "text": "ныряние в форме"}, {"id": 4, "text": "ныряние в длину и глубину"}, {"id": 5, "text": "плавание на 500 м вольным стилем"}, {"id": 6, "text": "плавание на 100 м вольным стилем"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «специальные приемы и действия»?", "options": [{"id": 1, "text": "комплексное упражнение «квадрат»"}, {"id": 2, "text": "бег с преодолением полосы препятствий"}, {"id": 3, "text": "метание гранаты на точность"}, {"id": 4, "text": "комплекс приемов и действий рукопашного боя"}, {"id": 5, "text": "плавание в обмундировании на 100 м"}], "correct_answer": "1,2,3"}, {"num": 4, "text": "Что включат в себя организация физической подготовки?", "options": [{"id": 1, "text": "планирование и проведение мероприятий физической подготовки"}, {"id": 2, "text": "постановку задач исполнителям, организацию взаимодействия и всестороннее обеспечение их действий"}, {"id": 3, "text": "ведение учета физической подготовки"}, {"id": 4, "text": "контроль за ходом выполнения поставленных задач"}, {"id": 5, "text": "медицинское обеспечение"}, {"id": 6, "text": "подготовку должностных лиц, осуществляющих проведение физической подготовки с военнослужащими"}, {"id": 7, "text": "представление отчетности"}, {"id": 8, "text": "анализ результатов и подведение итогов"}, {"id": 9, "text": "осуществление контроля проведения мероприятий физической подготовки в подразделениях и оказание помощи руководителям занятий по физической подготовке"}], "correct_answer": "1,3,6,9"}, {"num": 5, "text": "По какой команде выполняется упражнение №25.", "options": [{"id": 1, "text": "«ЗАНЯТЬ МЕСТА», «НА СТАРТ», « МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "« К выполнению упражнения ПРИСТУПИТЬ»"}, {"id": 4, "text": "«НА СТАРТ», « МАРШ»"}], "correct_answer": "4"}, {"num": 6, "text": "Назовите номер упражнения – Челночный бег 10×10 м.", "options": [{"id": 1, "text": "№19"}, {"id": 2, "text": "№21"}, {"id": 3, "text": "№70"}, {"id": 4, "text": "№17"}], "correct_answer": "1"}, {"num": 7, "text": "Ловкость – это:", "options": [{"id": 1, "text": "это способность организма целесообразно согласовывать движения, организовывать их в единое целое, координировать движения с учетом освоенного действия или переключать их в соответствии с меняющимися условиями"}, {"id": 2, "text": "способность организма продолжительное время выполнять работу на высоком уровне без снижения ее эффективности"}, {"id": 3, "text": "это способность организма преодолевать внешнее сопротивление или противодействовать ему за счет мышечных усилий"}, {"id": 4, "text": "это способность организма совершать двигательные действия в минимальное время"}], "correct_answer": "1"}, {"num": 8, "text": "Оздоровительные силы природы (солнце, воздух и вода) являются:", "options": [{"id": 1, "text": "неестественными факторами, с которыми военнослужащие находятся в постоянном взаимодействии"}, {"id": 2, "text": "естественными факторами, с которыми военнослужащие находятся в постоянном взаимодействии"}, {"id": 3, "text": "естественными факторами, с которыми военнослужащие не находятся в постоянном взаимодействии"}], "correct_answer": "2"}, {"num": 9, "text": "Решение воспитательных задач обеспечивается:", "options": [{"id": 1, "text": "применением методов убеждения, примера, соревнования, поощрения, принуждения и воздействия коллектива"}, {"id": 2, "text": "применением способов убеждения, примера, соревнования, поощрения, принуждения и воздействия коллектива"}, {"id": 3, "text": "подбором физических упражнений, в которых психические свойства личности проявляются в наибольшей мере"}, {"id": 4, "text": "подбором физических упражнений, в которых психические свойства личности проявляются в наименьшей мере"}], "correct_answer": "1"}, {"num": 10, "text": "Тренировка физического упражнения направлена на:", "options": [{"id": 1, "text": "замещение у военнослужащих двигательных навыков и заключается в многократном повторении физического упражнения с постепенным усложнением условий его выполнения"}, {"id": 2, "text": "закрепление у военнослужащих двигательных навыков и заключается в однократном повторении физического упражнения с постепенным усложнением качества его выполнения"}, {"id": 3, "text": "закрепление у военнослужащих двигательных навыков и заключается в многократном повторении физического упражнения с постепенным усложнением условий его выполнения"}], "correct_answer": "2"}]}, "12": {"variant": 12, "questions": [{"num": 1, "text": "Что определяет Наставление по физической подготовке в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "порядок организации физической подготовки военнослужащих Вооружённых Сил Российской Федерации (ВС РФ), в том числе требования к уровню физической подготовленности военнослужащих ВС РФ"}, {"id": 2, "text": "систему физической подготовки в ВС РФ"}, {"id": 3, "text": "требования по уровню физической подготовки граждан РФ, иностранных граждан, поступающих на военную службу по контракту"}], "correct_answer": "1,3"}, {"num": 2, "text": "На что направлена физическая подготовка военнослужащих в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "на развитие физических качеств"}, {"id": 2, "text": "на формирование военно-прикладных двигательных навыков"}, {"id": 3, "text": "на получение теоретических знаний у военнослужащих"}, {"id": 4, "text": "на формирование методических умений у военнослужащих"}], "correct_answer": "1,2"}, {"num": 3, "text": "Когда проводится физическая подготовка?", "options": [{"id": 1, "text": "мирное время"}, {"id": 2, "text": "военное время"}, {"id": 3, "text": "во время частичной мобилизации в РФ"}], "correct_answer": "1,2"}, {"num": 4, "text": "Какие элементы системы физической подготовки являются основными?", "options": [{"id": 1, "text": "цель, задачи"}, {"id": 2, "text": "объект, предмет"}, {"id": 3, "text": "гипотеза"}, {"id": 4, "text": "результат, организация"}], "correct_answer": "1,2,4"}, {"num": 5, "text": "Выберите -какое количество баллов надо получить по одному упражнению \nна оценки «отлично», «хорошо», « удовлетворительно», курсантам 3 курса.", "options": [{"id": 1, "text": "65,55,45"}, {"id": 2, "text": "70,40,35"}, {"id": 3, "text": "70,65,55"}, {"id": 4, "text": "75,70,65"}], "correct_answer": "3"}, {"num": 6, "text": "Назовите Пороговый минимум в одном упражнении \nдля курсантов 3 курса.", "options": [{"id": 1, "text": "32"}, {"id": 2, "text": "34"}, {"id": 3, "text": "38"}, {"id": 4, "text": "26"}], "correct_answer": "3"}, {"num": 7, "text": "Выберите номера упражнений, направленных на развитие\n физического качества сила.", "options": [{"id": 1, "text": "7,5,19,17,6"}, {"id": 2, "text": "18,21,53,67,2"}, {"id": 3, "text": "3,12,7,1,5"}, {"id": 4, "text": "2,25,41,4,21"}], "correct_answer": "3"}, {"num": 8, "text": "Смотры спортивно массовой работы воинской части, вузах это:", "options": [{"id": 1, "text": "комплексные заочные соревнования, в которых по объективным и одинаковым для всех показателям сравнивается качество спортивной работы  в военных учебных заведениях"}, {"id": 2, "text": "это  соревнования, в которых по объективным и одинаковым для всех показателям сравнивается качество спортивной работы  в военных учебных заведениях"}, {"id": 3, "text": "это комплексные заочные соревнования, в которых сравнивается качество спортивной работы  в военных учебных заведениях"}], "correct_answer": "1"}, {"num": 9, "text": "К основным элементам здорового образа жизни относятся:", "options": [{"id": 1, "text": "режим труда и отдыха"}, {"id": 2, "text": "сон"}, {"id": 3, "text": "питание"}, {"id": 4, "text": "двигательная активность"}, {"id": 5, "text": "личная гигиена и закаливание"}, {"id": 6, "text": "профилактика вредных привычек"}], "correct_answer": "1,3,5,6"}, {"num": 10, "text": "К принципам физического воспитания относятся:", "options": [{"id": 1, "text": "Философские принципы"}, {"id": 2, "text": "Основополагающие принципы физической культуры"}, {"id": 3, "text": "Вспомогательные принципы физической культуры"}, {"id": 4, "text": "Общепедагогические принципы физического воспитания"}, {"id": 5, "text": "Специфические принципы, выражающие закономерности методики развития физических качеств и двигательных способностей"}], "correct_answer": "4,5"}]}, "13": {"variant": 13, "questions": [{"num": 1, "text": "Чем определяется уровень физической подготовленности", "options": [{"id": 1, "text": "уровнем устойчивости организма к воздействию неблагоприятных факторов военно-профессиональной деятельности и окружающей среды"}, {"id": 2, "text": "степенью готовности военнослужащих к перенесению экстремальных физических и психических нагрузок в период подготовки и ведения боевых действий"}, {"id": 3, "text": "степенью развития физических качеств, сформированности военно-прикладных двигательных навыков"}, {"id": 4, "text": "достигнутым уровнем теоретических знаний и методических умений"}], "correct_answer": "3,4"}, {"num": 2, "text": "Кто является специалистам физической подготовки (ст.13)?", "options": [{"id": 1, "text": "военнослужащие, имеющие образование в области физической культуры и спорта"}, {"id": 2, "text": "лица гражданского персонала ВС РФ, имеющих образование в области физической культуры"}, {"id": 3, "text": "военнослужащие имеющую квалификацию и находящиеся на должностях, подлежащих замещению специалистами физической подготовки"}], "correct_answer": "3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «сила»?", "options": [{"id": 1, "text": "подтягивание на перекладине"}, {"id": 2, "text": "восхождение на платформу (тумбу)"}, {"id": 3, "text": "бег на 60 м с грузом"}, {"id": 4, "text": "толчок двух гирь"}, {"id": 5, "text": "подъем переворотом на перекладине"}, {"id": 6, "text": "комбинированное силовое упражнение на перекладине"}], "correct_answer": "1,4,5,6"}, {"num": 4, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «быстрота»?", "options": [{"id": 1, "text": "подтягивание на перекладине"}, {"id": 2, "text": "челночный бег 10х10 м"}, {"id": 3, "text": "бег на 100м"}, {"id": 4, "text": "бег на 1 км"}, {"id": 5, "text": "бег на 800 м с оружием"}], "correct_answer": "2,3"}, {"num": 5, "text": "Выберите номера упражнений направленных на развитие  физического качества быстрота.", "options": [{"id": 1, "text": "№17, №18, №19"}, {"id": 2, "text": "№31, №30, №25"}, {"id": 3, "text": "№ 44, №15, №36"}], "correct_answer": "1"}, {"num": 6, "text": "Назовите номер упражнения – Жим штанги лежа.", "options": [{"id": 1, "text": "№14"}, {"id": 2, "text": "№15"}, {"id": 3, "text": "№16"}], "correct_answer": "1"}, {"num": 7, "text": "На какое физическое качество направленно упражнение №14.", "options": [{"id": 1, "text": "быстрота"}, {"id": 2, "text": "сила"}, {"id": 3, "text": "ловкость"}, {"id": 4, "text": "выносливость"}], "correct_answer": "2"}, {"num": 8, "text": "Организацию физической подготовки в военно-учебном заведении регламентируют ряд руководящих документов:", "options": [{"id": 1, "text": "Федеральный закон от 4 декабря 2007 г. № 329-ФЗ «О физической культуре и спорте в Российской Федерации»"}, {"id": 2, "text": "Федеральный закон от 4 декабря 2017 г. № 323-ФЗ «О физической культуре в России»"}, {"id": 3, "text": "Приказ МО РФ от 30 мая 2022 г. № 308-ФЗ «Об организации образовательной деятельности в федеральных государственных организациях, осуществляемых образовательную деятельность и находящихся в ведении Министерства обороны Российской Федерации»"}, {"id": 4, "text": "Приказ МО РФ от 20 апреля 2023 г. № 230 «Об утверждении Наставления по физической подготовке в Вооруженных Силах Российской Федерации»"}, {"id": 5, "text": "Приказ МО РФ от 1 мая 2020 г. № 370-ФЗ «Об организации образовательной деятельности в федеральных государственных организациях, осуществляемых образовательную деятельность и находящихся в ведении Министерства обороны Российской Федерации»"}], "correct_answer": "2,4,5"}, {"num": 9, "text": "Концептуальные основы системы физической подготовки войск являются:", "options": [{"id": 1, "text": "отражением требований современного боя к психологическому состоянию личного состава, а также реальных возможностей обеспечения умственной готовности военнослужащих к повседневной деятельности"}, {"id": 2, "text": "отражением требований современного боя к физическому состоянию личного состава, а также реальных возможностей обеспечения физической готовности военнослужащих к боевой деятельности"}, {"id": 3, "text": "образованная в соответствии с требованиями боевой деятельности к физическому состоянию личного состава система физической подготовки"}], "correct_answer": "3"}, {"num": 10, "text": "Целью физической подготовки является:", "options": [{"id": 1, "text": "обеспечение необходимого уровня физической подготовленности военнослужащих, для выполнения боевых и других задач в соответствии с их предназначением"}, {"id": 2, "text": "успешное выполнение военнослужащими своих служебных обязанностей"}, {"id": 3, "text": "успешное выполнение военнослужащими своих повседневных обязанностей"}], "correct_answer": "2"}]}, "14": {"variant": 14, "questions": [{"num": 1, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «выносливость»?", "options": [{"id": 1, "text": "марш-бросок на 5 км"}, {"id": 2, "text": "бег на 800 м с оружием"}, {"id": 3, "text": "плавание на 500 м вольным стилем"}, {"id": 4, "text": "лыжная гонка на 5 км"}, {"id": 5, "text": "комплексное упражнение на ловкость"}], "correct_answer": "3,4"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «ловкость»?", "options": [{"id": 1, "text": "комплексное упражнение на ловкость"}, {"id": 2, "text": "передвижение по узкой опоре"}, {"id": 3, "text": "комбинированное упражнение на перекладине"}, {"id": 4, "text": "марш-бросок на 5 км"}, {"id": 5, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «преодоление препятствий»?", "options": [{"id": 1, "text": "общее контрольное упражнение на единой полосе препятствий"}, {"id": 2, "text": "специальное контрольное упражнение для военнослужащих горных подразделений"}, {"id": 3, "text": "марш-бросок на 5 км"}, {"id": 4, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2"}, {"num": 4, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «ускоренное передвижение»?", "options": [{"id": 1, "text": "бег на 60 м с грузом"}, {"id": 2, "text": "бег в экипировке с автоматом"}, {"id": 3, "text": "челночный бег 10х10"}, {"id": 4, "text": "бег на 1 км"}, {"id": 5, "text": "бег на 5 км"}, {"id": 6, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2,6"}, {"num": 5, "text": "Как называется общефизическое упражнение №14.", "options": [{"id": 1, "text": "Комплексное упражнение"}, {"id": 2, "text": "Жим штанги лежа"}, {"id": 3, "text": "Приседание со штангой"}, {"id": 4, "text": "Становая тяга со штангой"}], "correct_answer": "2"}, {"num": 6, "text": "По какой команде выполняется упражнение №14.", "options": [{"id": 1, "text": "«ЗАНЯТЬ МЕСТА», «НА СТАРТ», «МАРШ»"}, {"id": 2, "text": "« К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "2"}, {"num": 7, "text": "Как называется  общефизическое упражнение №2.", "options": [{"id": 1, "text": "отжимание"}, {"id": 2, "text": "подъем силой на перекладине"}, {"id": 3, "text": "наклоны туловища вперед согнув ноги"}, {"id": 4, "text": "вис на перекладине"}, {"id": 5, "text": "наклоны  туловища вперед"}], "correct_answer": "5"}, {"num": 8, "text": "На какое физическое качество направленно упражнение №2.", "options": [{"id": 1, "text": "выносливость"}, {"id": 2, "text": "быстрота"}, {"id": 3, "text": "сила"}, {"id": 4, "text": "ловкость"}], "correct_answer": "3"}, {"num": 9, "text": "Задачами физической подготовки являются:", "options": [{"id": 1, "text": "развитие физических качеств у военнослужащих"}, {"id": 2, "text": "формирование и совершенствование у военнослужащих военно-прикладных двигательных навыков"}, {"id": 3, "text": "получение теоретических знаний и формирование методических умений военнослужащих для проведения мероприятий физической подготовки"}, {"id": 4, "text": "развитие и совершенствование физических качеств (выносливости, силы, быстроты и ловкости) с учетом возрастных особенностей"}], "correct_answer": "1,2,3"}, {"num": 10, "text": "Принцип прикладности выражает:", "options": [{"id": 1, "text": "основное предназначение физической подготовки войск – готовить военнослужащих к успешному выполнению учебно-боевых и боевых задач"}, {"id": 2, "text": "воспитания военнослужащих – созданием конкретных боевых ситуаций"}, {"id": 3, "text": "развитие военнослужащих – акцентированием совершенствования особо важных специальных качеств"}], "correct_answer": "1"}]}, "15": {"variant": 15, "questions": [{"num": 1, "text": "Какой приказ МО РФ определяет порядок \nорганизации физической подготовки военнослужащих ВС РФ?", "options": [{"id": 1, "text": "Приказ Министра обороны Российской Федерации № 520 от 2017 г."}, {"id": 2, "text": "Приказ Министра обороны Российской Федерации № 385 от 2005 г."}, {"id": 3, "text": "Приказ Министра обороны Российской Федерации № 230 от 2023 г."}], "correct_answer": "3"}, {"num": 2, "text": "Укажите продолжительность учебных занятий по физической подготовке для курсантов, проходящих обучение в образовательных организациях высшего образования МО РФ в соответствии с НФП-2023:", "options": [{"id": 1, "text": "45 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 2, "text": "не менее 4 учебных часов в неделю"}, {"id": 3, "text": "4 академических часа в неделю"}, {"id": 4, "text": "4 академических часа в неделю, из которых 2 академических часа – на аудиторное занятие, 2 – на самостоятельную работу"}], "correct_answer": "3"}, {"num": 3, "text": "Укажите продолжительность спортивно-массовой работы для курсантов, проходящих обучение в образовательных организациях высшего образования \nМО РФ в соответствии с НФП-2023:", "options": [{"id": 1, "text": "не менее 4 учебных часов в неделю"}, {"id": 2, "text": "2 раза в неделю по 50 минут в рабочие дни в свободное от занятий время и не менее 3-х часов в выходные и нерабочие праздничные дни"}, {"id": 3, "text": "не менее 3-х часов в выходные и нерабочие праздничные дни"}], "correct_answer": "2"}, {"num": 4, "text": "Определите категории военнослужащих в зависимости от особенностей \nвоенно-профессиональной деятельности \nв соответствии с НФП-2023:", "options": [{"id": 1, "text": "военнослужащие, проходящие военную службу в основных подразделениях и подразделениях обеспечения воинских частей видов Вооруженных Сил, родов войск Вооруженных Сил и не входящих в них, кроме военнослужащих подразделений, указанных в категориях № 2 и 3;"}, {"id": 2, "text": "военнослужащие, проходящие военную службу в подразделениях: топогеодезических, метеорологических (гидрометеорологических), материально-технического обеспечения, медицинских, предупреждения о ракетном нападении и разведки космической обстановки, испытательных центров (полигонов), аэродромно-технического обеспечения, переменный состав учебных воинских частей;"}, {"id": 3, "text": "военнослужащие, проходящие военную службу в органах военного управления, управлениях соединений, управлениях воинских частей, управлениях батальонов (им равных), научных организациях Вооруженных Сил (военных учебных центрах), военных представительствах, главных центрах (центрах, арсеналах, базах, отделах) видов обеспечения, центрах управления, лабораториях специального контроля, вузах на должностях постоянного и переменного состава (за исключением курсантов), учебных воинских частях на должностях постоянного состава, на пунктах отбора на военную службу по контракту, в военных комиссариатах, медицинских организациях Вооруженных Сил, военных оркестрах (ансамблях), фельдъегерской почтовой службе."}, {"id": 4, "text": "военнослужащие подразделений, не входящих в категории № 1 и 2"}], "correct_answer": "1-1; 2-2\n3-3; 4-3"}, {"num": 5, "text": "Назовите номер упражнения – Наклоны туловища вперед.", "options": [{"id": 1, "text": "№3"}, {"id": 2, "text": "№67"}, {"id": 3, "text": "№7"}, {"id": 4, "text": "№2"}], "correct_answer": "4"}, {"num": 6, "text": "По какой команде выполняется упражнение №2.", "options": [{"id": 1, "text": "«ВПЕРЕД»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}, {"id": 4, "text": "«ВНИМАНИЕ»,  «МАРШ»."}], "correct_answer": "3"}, {"num": 7, "text": "Назовите номер упражнения – Прыжки на скакалке", "options": [{"id": 1, "text": "№31"}, {"id": 2, "text": "№45"}, {"id": 3, "text": "№12"}, {"id": 4, "text": "№13"}], "correct_answer": "1"}, {"num": 8, "text": "В системе управления физической подготовкой военнослужащих реализация принципа прикладности достигается:", "options": [{"id": 1, "text": "в руководстве – принятием глубоко продуманных и всесторонне обоснованных решений"}, {"id": 2, "text": "в организации – более полным учётом периодизации военно-профессиональной деятельности военнослужащих различных воинских специальностей; подчинением содержания занятий по физической подготовке содержанию занятий по тактической (тактико-специальной) подготовке"}, {"id": 3, "text": "в обеспечении – строительством и оборудованием таких спортивных объектов и мест для занятий физической подготовкой и спортом, которые позволяют в массовом порядке выполнять различные военно-прикладные упражнения из различных разделов физической подготовки"}, {"id": 4, "text": "в проведении – преимущественным проведением комплексных занятий и тренировок"}], "correct_answer": "4"}, {"num": 9, "text": "Физические упражнения – это:", "options": [{"id": 1, "text": "средства физической подготовки, являются движения и действия используемые с целью улучшения физического состояния военнослужащих"}, {"id": 2, "text": "форма физической подготовки, являются движения и действия используемые с целью улучшения физического состояния военнослужащих"}, {"id": 3, "text": "методы физической подготовки, являются движения и действия используемые с целью улучшения физического состояния военнослужащих"}], "correct_answer": "3"}, {"num": 10, "text": "Техникой физических упражнений называются:", "options": [{"id": 1, "text": "Способы выполнения упражнений, обеспечивающие их мощную эффективность"}, {"id": 2, "text": "Способы выполнения упражнений, обеспечивающие их наибольшую эффективность"}, {"id": 3, "text": "Способы выполнения упражнений, обеспечивающие их качественную эффективность"}], "correct_answer": "2"}]}, "16": {"variant": 16, "questions": [{"num": 1, "text": "Для проверки уровня физической подготовленности военнослужащие женского пола распределяются на возрастные группы (указать соответствие для всех вариантов ответа):", "options": [{"id": 1, "text": "25-29 лет"}, {"id": 2, "text": "до 25 лет"}, {"id": 3, "text": "35-39 лет"}, {"id": 4, "text": "30-34 года"}, {"id": 5, "text": "40-44 года"}, {"id": 6, "text": "45-49 лет"}, {"id": 7, "text": "50 и старше"}, {"id": 8, "text": "отсутствует"}, {"id": 9, "text": "отсутствует"}], "correct_answer": "1-2; 2-1\n3-4; 4-3\n5-5; 6-6\n7-7"}, {"num": 2, "text": "Для оценки уровня физической подготовленности курсанты выполняют физические упражнения, входящие в программы обучения, при этом количество физических упражнений должно соответствовать (указать соответствие для всех вариантов ответа):", "options": [{"id": 1, "text": "4 физических упражнения, из которых 3ОФУ (на быстроту или ловкость, силу, выносливость) и 1 СФУ"}, {"id": 2, "text": "5 физических упражнений, из которых 3ОФУ (на ловкость, силу, выносливость или быстроту, силу ловкость) и 2 СФУ"}, {"id": 3, "text": "3 физических упражнения, из которых 2 ОФУ (на быстроту или ловкость, силу либо на быстроту или ловкость, выносливость либо на силу, выносливость) и 1 СФУ"}, {"id": 4, "text": "2 физических упражнения, все ОФУ (на быстроту, или ловкость, или силу, выносливость)"}], "correct_answer": "2"}, {"num": 3, "text": "Для проверки уровня физической подготовленности профессорско-преподавательским составом в период промежуточной аттестации составляется:", "options": [{"id": 1, "text": "программа проведения практической части проведения зачета/экзамена;"}, {"id": 2, "text": "контрольно-проверочные комплексы;"}, {"id": 3, "text": "приказ проведения контрольной проверки курсантов;"}], "correct_answer": "2"}, {"num": 4, "text": "Как называется упражнение №31.", "options": [{"id": 1, "text": "восхождение на платформу (тумбу)"}, {"id": 2, "text": "комбинированное упражнение на брусьях"}, {"id": 3, "text": "прыжки со скакалкой"}, {"id": 4, "text": "комплексное упражнение на ловкость"}], "correct_answer": "3"}, {"num": 5, "text": "По какой команде выполняется упражнение №31.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "3"}, {"num": 6, "text": "Назовите номер упражнения- Общее контрольное упражнение на единой полосе препятствий", "options": [{"id": 1, "text": "45"}, {"id": 2, "text": "46"}, {"id": 3, "text": "47"}], "correct_answer": "1"}, {"num": 7, "text": "Какой нормативно-правовой документ устанавливает правовые, организационные, экономические и социальные основы деятельности в области физической культуры и спорта в РФ?", "options": [{"id": 1, "text": "ФЗ от 04.12.2007 №329-ФЗ (ред. от 24.06.2023) «О физической культуре и спорте в РФ»"}, {"id": 2, "text": "Приказ МО РФ от 20.04.2023 №230 «Об утверждении Наставления по физической подготовке в ВС РФ»"}], "correct_answer": "1"}, {"num": 8, "text": "Физическая культура это:", "options": [{"id": 1, "text": "сфера социально-культурной деятельности как совокупность видов спорта, сложившаяся в форме соревнований и специальной практики подготовки человека к ним"}, {"id": 2, "text": "процесс, направленный на воспитание личности, развитие физических возможностей человека, приобретение им умений и знаний в области физической культуры и спорта в целях формирования всесторонне развитого и физически здорового человека с высоким уровнем физической культуры"}, {"id": 3, "text": "часть культуры, представляющая собой совокупность ценностей, норм и знаний, создаваемых и используемых обществом в целях физического и интеллектуального развития способностей человека, совершенствования его двигательной активности и формирования здорового образа жизни, социальной адаптации путем физического воспитания, физической подготовки и физического развития"}], "correct_answer": "3"}, {"num": 9, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в пяти упражнениях, чтобы получить оценку «отлично» за уровень физической подготовленности?", "options": [{"id": 1, "text": "360"}, {"id": 2, "text": "370"}, {"id": 3, "text": "380"}, {"id": 4, "text": "350"}], "correct_answer": "1"}, {"num": 10, "text": "Из каких оценок складывается оценка курсанта образовательной организации по учебной дисциплине «Физическая подготовка»?", "options": [{"id": 1, "text": "оценки по теоретической подготовленности"}, {"id": 2, "text": "оценки по методической подготовленности"}, {"id": 3, "text": "оценки уровень физической подготовленности"}, {"id": 4, "text": "оценки по практической подготовленности"}], "correct_answer": "1,2,3"}]}, "17": {"variant": 17, "questions": [{"num": 1, "text": "Уровень развития каждого физического качества и формирования военно-прикладного двигательного навыка проверяется по:", "options": [{"id": 1, "text": "2 общефизическим упражнениям"}, {"id": 2, "text": "1 физическому упражнению"}, {"id": 3, "text": "3 специальным физическим упражнениям"}], "correct_answer": "2"}, {"num": 2, "text": "В каких случаях в контрольно-проверочный комплекс (КПК) не включается упражнения на проверку уровня развития выносливости:", "options": [{"id": 1, "text": "если в КПК включены следующие общие физические упражнения: бег на 100 м; челночный бег 10х10 м"}, {"id": 2, "text": "если в КПК включены следующие специальные физические упражнения: марш-бросок на 5 км; марш-бросок на лыжах на 5 км"}, {"id": 3, "text": "если в КПК включены следующие специальные физические упражнения: бег на 3 км со стрельбой и метанием гранат; преодоление полосы препятствий"}, {"id": 4, "text": "если в КПК включены следующие общие физические упражнения: бег на 100 м; челночный бег 10х10 м"}], "correct_answer": "2,3"}, {"num": 3, "text": "Проверка уровня физической подготовленности военнослужащего проводится:", "options": [{"id": 1, "text": "1 день"}, {"id": 2, "text": "4 дня"}, {"id": 3, "text": "3 дня"}, {"id": 4, "text": "до 2 дней"}], "correct_answer": "4"}, {"num": 4, "text": "Укажите последовательность выполнения физических упражнений на проверке:", "options": [{"id": 1, "text": "упражнения на силу"}, {"id": 2, "text": "специальные приемы и действия, метание гранаты"}, {"id": 3, "text": "комплексные упражнения"}, {"id": 4, "text": "военно-прикладное плавание"}, {"id": 5, "text": "упражнения на выносливость"}, {"id": 6, "text": "комплексы рукопашного боя"}, {"id": 7, "text": "упражнения на быстроту"}, {"id": 8, "text": "марш-броски, марш-броски на лыжах"}, {"id": 9, "text": "упражнения на ловкость"}], "correct_answer": "1-3; 2-6\n3-9; 4-8\n5-4; 6-5\n7-2; 8-7\n9-1"}, {"num": 5, "text": "Как называется  общефизическое упражнение №45.", "options": [{"id": 1, "text": "Общее контрольное упражнение на единой полосе препятствий"}, {"id": 2, "text": "Марш бросок на лыжах на 5 км"}, {"id": 3, "text": "Марш бросок на 5 км"}, {"id": 4, "text": "Бег на 800 м с оружием"}], "correct_answer": "1"}, {"num": 6, "text": "По какой команде выполняется упражнение №45:", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "3"}, {"num": 7, "text": "Дистанция упражнения-№45.", "options": [{"id": 1, "text": "200 м"}, {"id": 2, "text": "800 м"}, {"id": 3, "text": "5 км"}, {"id": 4, "text": "400 м"}], "correct_answer": "4"}, {"num": 8, "text": "Циклические упражнения представляют собой:", "options": [{"id": 1, "text": "цепь периодически повторяющихся действий, при выполнении которых тело человека и его части каждый раз оказываются в разных исходных положениях (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}, {"id": 2, "text": "двигательные действия, при выполнении которых отсутствует смежная повторяемость стандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}, {"id": 3, "text": "цепь периодически повторяющихся движений или действий, при выполнении которых тело человека и его части каждый раз оказываются в одном и том же исходном положении (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}], "correct_answer": "2"}, {"num": 9, "text": "Ациклические упражнения –  это", "options": [{"id": 1, "text": "цепь периодически повторяющихся движений или действий, при выполнении которых тело человека и его части каждый раз оказываются в одном и том же исходном положении (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}, {"id": 2, "text": "такие двигательные действия, при выполнении которых отсутствует смежная повторяемость стандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}, {"id": 3, "text": "такие двигательные действия, при выполнении которых отсутствует нужная повторяемость нестандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}], "correct_answer": "2"}, {"num": 10, "text": "Назовите какое минимальное количество баллов, необходимо набрать в одном упражнении курсанту 3 курса, чтобы не получить оценку «неудовлетворительно» за уровень физической подготовленности?", "options": [{"id": 1, "text": "38"}, {"id": 2, "text": "36"}, {"id": 3, "text": "34"}, {"id": 4, "text": "32"}], "correct_answer": "1"}]}, "18": {"variant": 18, "questions": [{"num": 1, "text": "Укажите последовательность выполнения физических упражнений при выполнении общеразвивающих упражнений на месте:", "options": [{"id": 1, "text": "упражнения для мышц рук и плечевого пояса"}, {"id": 2, "text": "упражнения для мышц ног"}, {"id": 3, "text": "упражнения для мышц всего тела"}, {"id": 4, "text": "подтягивающие упражнения"}, {"id": 5, "text": "упражнения в прыжках"}], "correct_answer": "1-2; 2-3\n3-4; 4-1\n5-5;"}, {"num": 2, "text": "В каких случаях преподаватель (руководитель занятия) разучивает физическое упражнение с помощью подготовительных упражнений?", "options": [{"id": 1, "text": "если физическое упражнение несложное, доступное для обучаемых или его выполнение по элементам невозможно;"}, {"id": 2, "text": "если физическое упражнение сложное и его можно разделить на отдельные элементы;"}, {"id": 3, "text": "если физическое упражнение сложное и его можно выполнить с остановками;"}, {"id": 4, "text": "если в целом из-за трудности его выполнить нельзя, а разделить на части невозможно."}], "correct_answer": "4"}, {"num": 3, "text": "Укажите продолжительность УФЗ для военнослужащих, проходящих военную службу по призыву и проходящих обучение в военно-учебных заведениях на воинских должностях курсантов в соответствии с НФП-2023?", "options": [{"id": 1, "text": "30 минут ежедневно, кроме выходных и нерабочих праздничных дней;"}, {"id": 2, "text": "45 минут ежедневно, кроме выходных и нерабочих праздничных дней;"}, {"id": 3, "text": "30-50 минут ежедневно, кроме выходных и нерабочих праздничных дней;"}], "correct_answer": "1"}, {"num": 4, "text": "Назовите номер упражнения – метание гранат на точность.", "options": [{"id": 1, "text": "№69"}, {"id": 2, "text": "№31"}, {"id": 3, "text": "№68"}, {"id": 4, "text": "№70"}], "correct_answer": "1"}, {"num": 5, "text": "Как называется упражнение № 69.", "options": [{"id": 1, "text": "Метание гранат на точность"}, {"id": 2, "text": "Вис на перекладине"}, {"id": 3, "text": "Поднимание ящика для боеприпасов"}, {"id": 4, "text": "Упор лежа на предплечьях"}], "correct_answer": "1"}, {"num": 6, "text": "По какой команде выполняется упражнение №69.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "Гранатой огонь"}, {"num": 7, "text": "Назовите номер упражнения – Приседание со штангой.", "options": [{"id": 1, "text": "№16"}, {"id": 2, "text": "№21"}, {"id": 3, "text": "№35"}, {"id": 4, "text": "№69"}], "correct_answer": "1"}, {"num": 8, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в пяти упражнениях, чтобы получить второй квалификационный уровень физической подготовленности?", "options": [{"id": 1, "text": "370"}, {"id": 2, "text": "380"}, {"id": 3, "text": "390"}, {"id": 4, "text": "400"}], "correct_answer": "1"}, {"num": 9, "text": "Какое количество баллов необходимо набрать курсанту 3 курса  в пяти упражнениях, чтобы получить оценку «отлично» за уровень физической подготовленности", "options": [{"id": 1, "text": "360"}, {"id": 2, "text": "370"}, {"id": 3, "text": "380"}, {"id": 4, "text": "39"}], "correct_answer": "1"}, {"num": 10, "text": "Для чего предназначена спортивно массовая работа ?", "options": [{"id": 1, "text": "для организации и проведения физкультурно-спортивных мероприятий, повышения физической подготовленности, организации досуга и пропаганды здорового образа жизни"}, {"id": 2, "text": "для проведения с военнослужащими массовых спортивных мероприятий и пропаганды здорового образа жизни"}], "correct_answer": "1"}]}, "19": {"variant": 19, "questions": [{"num": 1, "text": "Укажите продолжительность УФЗ для военнослужащих, проходящих военную службу по призыву и проходящих обучение в военно-учебных заведениях на воинских должностях курсантов в соответствии с НФП-2023?", "options": [{"id": 1, "text": "30 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 2, "text": "45 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 3, "text": "30-50 минут ежедневно, кроме выходных и нерабочих праздничных дней"}], "correct_answer": "1"}, {"num": 2, "text": "Что определяет Наставление по физической подготовке в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "порядок организации физической подготовки военнослужащих Вооружённых Сил Российской Федерации (ВС РФ), в том числе требования к уровню физической подготовленности военнослужащих ВС РФ;"}, {"id": 2, "text": "систему физической подготовки в ВС РФ;"}, {"id": 3, "text": "требования по уровню физической подготовки граждан РФ, иностранных граждан, поступающих на военную службу по контракту."}], "correct_answer": "1,3"}, {"num": 3, "text": "На что направлена физическая подготовка военнослужащих в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "на развитие физических качеств;"}, {"id": 2, "text": "на формирование военно-прикладных двигательных навыков;"}, {"id": 3, "text": "на получение теоретических знаний у военнослужащих;"}, {"id": 4, "text": "на формирование методических умений у военнослужащих;"}], "correct_answer": "1,2"}, {"num": 4, "text": "Как называется  упражнение №25.", "options": [{"id": 1, "text": "Бег на 3 км"}, {"id": 2, "text": "Бег на 1 км"}, {"id": 3, "text": "Лыжная гонка на 5 км"}, {"id": 4, "text": "Бег на 400 м"}], "correct_answer": "1"}, {"num": 5, "text": "Назовите номер упражнения – Комбинированное силовое упражнение на перекладине.", "options": [{"id": 1, "text": "№5"}, {"id": 2, "text": "№19"}, {"id": 3, "text": "№2"}, {"id": 4, "text": "№7"}], "correct_answer": "4"}, {"num": 6, "text": "Как называется упражнение №7.", "options": [{"id": 1, "text": "вис на перекладине"}, {"id": 2, "text": "подьем силой на перекладине"}, {"id": 3, "text": "сгибание и разгибание рук в упоре лежа"}, {"id": 4, "text": "комбинированное силовое упражнение на перекладине"}], "correct_answer": "4"}, {"num": 7, "text": "По каким показателям проверяется уровень методической подготовленности?", "options": [{"id": 1, "text": "отлично» - если выполнено 6 показателей методического задания; «хорошо» - если выполнено 5 показателя методического задания; «удовлетворительно» - если выполнено 4 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}, {"id": 2, "text": "«отлично» - если выполнено 4 показателей методического задания; «хорошо» - если выполнено 3 показателя методического задания; «удовлетворительно» - если выполнено 2 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}, {"id": 3, "text": "«отлично» - если выполнено 5 показателей методического задания; «хорошо» - если выполнено 4 показателя методического задания; «удовлетворительно» - если выполнено 3 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}, {"id": 4, "text": "отлично» - если выполнено 6 показателей методического задания; «хорошо» - если выполнено 5 показателя методического задания; «удовлетворительно» - если выполнено 4 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}], "correct_answer": "3"}, {"num": 8, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в пяти упражнениях, чтобы получить оценку «хорошо» за уровень физической подготовленности?", "options": [{"id": 1, "text": "320"}, {"id": 2, "text": "310"}, {"id": 3, "text": "300"}, {"id": 4, "text": "290"}], "correct_answer": "1"}, {"num": 9, "text": "Что включает в себя спортивно массовая работа в воинской части (вузе)?", "options": [{"id": 1, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы. Физкультурные праздники и показательные спортивные выступления. Военно-спортивный комплекс."}, {"id": 2, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы."}, {"id": 3, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы. Физкультурные праздники и показательные спортивные выступления.."}], "correct_answer": "1"}, {"num": 10, "text": "На что направлены учебно-тренировочные занятия в сборных командах воинской части, вузах?", "options": [{"id": 1, "text": "Учебно-тренировочные занятия в сборных командах вуза направлены на совершенствование спортивного мастерства военнослужащих в избранных видах спорта, на подготовку лучших воинов-спортсменов к участию в соответствующих соревнованиях."}, {"id": 2, "text": "Учебно-тренировочные занятия в сборных командах вуза направлены на совершенствование спортивного мастерства военнослужащих в избранных видах спорта,."}, {"id": 3, "text": "Учебно-тренировочные занятия в сборных командах вуза направлены на совершенствование спортивного мастерства, на подготовку  воинов-спортсменов к участию в соответствующих соревнованиях."}], "correct_answer": "2"}]}, "20": {"variant": 20, "questions": [{"num": 1, "text": "Когда проводится физическая подготовка?", "options": [{"id": 1, "text": "мирное время"}, {"id": 2, "text": "военное время"}, {"id": 3, "text": "во время частичной мобилизации в РФ"}], "correct_answer": "1,2"}, {"num": 2, "text": "Какие элементы системы физической подготовки являются основными?", "options": [{"id": 1, "text": "цель, задачи"}, {"id": 2, "text": "объект, предмет"}, {"id": 3, "text": "гипотеза"}, {"id": 4, "text": "результат, организация"}], "correct_answer": "1,2,4"}, {"num": 3, "text": "Цель физической подготовки?", "options": [{"id": 1, "text": "успешное выполнение военнослужащими своих служебных обязанностей"}, {"id": 2, "text": "обеспечение необходимого уровня физической подготовленности военнослужащих для выполнения боевых и других задач в соответствии с их предназначением"}, {"id": 3, "text": "повышение устойчивости организма к воздействию неблагоприятных факторов военно-профессиональной деятельности и окружающей среды"}, {"id": 4, "text": "воспитание психической устойчивости и морально-волевых качеств"}], "correct_answer": "1"}, {"num": 4, "text": "Что является задачами физической подготовки?", "options": [{"id": 1, "text": "развитие физических качеств у военнослужащих"}, {"id": 2, "text": "формирование и совершенствование у военнослужащих военно-прикладных двигательных навыков"}, {"id": 3, "text": "получение теоретических знаний и формирование методических умений военнослужащих для проведения мероприятий физической подготовки"}, {"id": 4, "text": "развитие и совершенствование физических качеств (выносливости, силы, быстроты и ловкости) с учетом возрастных особенностей"}, {"id": 5, "text": "формирование навыков в передвижении по пересеченной местности в пешем порядке и на лыжах, в преодолении естественных и искусственных препятствий, рукопашном бою, военно-прикладном плавании"}], "correct_answer": "1,2,3"}, {"num": 5, "text": "По какой команде выполняется упражнение №7.", "options": [{"id": 1, "text": "«ЗАНЯТЬ МЕСТА», «НА СТАРТ», «МАРШ»"}, {"id": 2, "text": "« К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "2"}, {"num": 6, "text": "Какой высоты должна быть платформа (тумба) в упражнении №29", "options": [{"id": 1, "text": "55 см"}, {"id": 2, "text": "30 см"}, {"id": 3, "text": "20 см"}, {"id": 4, "text": "40 см"}], "correct_answer": "2"}, {"num": 7, "text": "По какой команде выполняется упражнение №17.", "options": [{"id": 1, "text": "«НА СТАРТ», « МАРШ»."}, {"id": 2, "text": "«ВПЕРЕД»"}, {"id": 3, "text": "«НА СТАРТ», « ВНИМАНИЕ», « МАРШ»."}, {"id": 4, "text": "« К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "3"}, {"num": 8, "text": "Что является основными видами спортивно массовой работы?", "options": [{"id": 1, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы. Физкультурные праздники и показательные спортивные выступления. Военно-спортивный комплекс."}, {"id": 2, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы."}, {"id": 3, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы. Физкультурные праздники и показательные спортивные выступления.."}], "correct_answer": "1"}, {"num": 9, "text": "Смотры спортивно массовой работы воинской части, вузах это:", "options": [{"id": 1, "text": "Смотры спортивной работы в Вооруженных силах являются комплексными заочными соревнованиями, в которых по объективным и одинаковым для всех показателям сравнивается качество спортивной работы в подразделениях, частях, в военных учебных заведениях, военных округах, видах и родах Вооруженных сил."}, {"id": 2, "text": "Смотры спортивной работы в Вооруженных силах являются  соревнования, в которых по объективным и одинаковым для всех показателям сравнивается качество спортивной работы в подразделениях, частях, в военных учебных заведениях"}, {"id": 3, "text": "Смотры спортивной работы в Вооруженных силах являются соревнования, в которых по  всем показателям сравнивается качество спортивной работы в подразделениях, частях, в военных учебных заведениях, военных округах, видах и родах Вооруженных сил"}], "correct_answer": "1"}, {"num": 10, "text": "К основным элементам здорового образа жизни относятся:", "options": [{"id": 1, "text": "рациональное питание, физическая активность, личная гигиена, закаливание, отказ от вредных привычек"}, {"id": 2, "text": "рациональное питание, физическая активность, личная гигиена, закаливание,"}, {"id": 3, "text": "рациональное питание, физическая активность, личная гигиена, отказ от вредных привычек"}, {"id": 4, "text": "рациональное питание, , личная гигиена, закаливание, отказ от вредных привычек"}], "correct_answer": "1"}]}, "21": {"variant": 21, "questions": [{"num": 1, "text": "Кто является объектом физической подготовки?", "options": [{"id": 1, "text": "должностные лица, осуществляющие организацию и проведение физической подготовки с военнослужащими"}, {"id": 2, "text": "военнослужащие, занимающиеся физической подготовкой"}, {"id": 3, "text": "командиры структурных подразделений"}], "correct_answer": "2"}, {"num": 2, "text": "Кто является субъектом физической подготовки?", "options": [{"id": 1, "text": "должностные лица, осуществляющие организацию и проведение физической подготовки с военнослужащими"}, {"id": 2, "text": "военнослужащие, занимающиеся физической подготовкой"}, {"id": 3, "text": "командиры структурных подразделений"}], "correct_answer": "1"}, {"num": 3, "text": "Чем определяется уровень физической подготовленности?", "options": [{"id": 1, "text": "степенью развития физических качеств, сформированности военно-прикладных двигательных навыков"}, {"id": 2, "text": "степенью развития физических качеств, сформированности военно- двигательных навыков"}, {"id": 3, "text": "качеством развития физических качеств, сформированности военно-прикладных двигательных навыков"}, {"id": 4, "text": "степенью тренировки физических качеств, сформированности военно-прикладных двигательных навыков"}], "correct_answer": "1"}, {"num": 4, "text": "По какой команде выполняется упражнение №17.", "options": [{"id": 1, "text": "«НА СТАРТ», « МАРШ»."}, {"id": 2, "text": "«ВПЕРЕД»"}, {"id": 3, "text": "«НА СТАРТ», « ВНИМАНИЕ», « МАРШ»."}, {"id": 4, "text": "« К выполнению упражнения ПРИСТУПИТЬ»"}], "correct_answer": "3"}, {"num": 5, "text": "Назовите номер упражнения – Плавание на 50 м вольным стилем.", "options": [{"id": 1, "text": "№1"}, {"id": 2, "text": "№21"}, {"id": 3, "text": "№18"}, {"id": 4, "text": "№20"}], "correct_answer": "4"}, {"num": 6, "text": "Как называется  общефизическое упражнение №28.", "options": [{"id": 1, "text": "плавание на 500 м вольным стилем"}, {"id": 2, "text": "комплексное упражнение на силу"}, {"id": 3, "text": "челночный бег 10×10 м"}, {"id": 4, "text": "комплексное упражнение на ловкость"}], "correct_answer": "1"}, {"num": 7, "text": "Как называется  общефизическое упражнение №25.", "options": [{"id": 1, "text": "прыжки со скакалкой"}, {"id": 2, "text": "плавание на 100 м вольным стилем"}, {"id": 3, "text": "бег на 400 м"}, {"id": 4, "text": "подьем переворотом"}, {"id": 5, "text": "бег на 3 км"}], "correct_answer": "5"}, {"num": 8, "text": "Физические качества – это:", "options": [{"id": 1, "text": "свойства организма обеспечивающие поступательную деятельность"}, {"id": 2, "text": "свойства организма обеспечивающие двигательную деятельность"}, {"id": 3, "text": "свойства организма обеспечивающие энергетическую деятельность"}], "correct_answer": "2"}, {"num": 9, "text": "Выносливость – это:", "options": [{"id": 1, "text": "это способность организма целесообразно согласовывать движения, организовывать их в единое целое, координировать движения с учетом освоенного действия или переключать их в соответствии с меняющимися условиями"}, {"id": 2, "text": "способность организма продолжительное время выполнять работу на высоком уровне без снижения ее эффективности"}, {"id": 3, "text": "это способность организма преодолевать внешнее сопротивление или противодействовать ему за счет мышечных усилий"}, {"id": 4, "text": "это способность организма совершать двигательные действия в минимальное время"}], "correct_answer": "2"}, {"num": 10, "text": "Сила – это:", "options": [{"id": 1, "text": "это способность организма целесообразно согласовывать движения, организовывать их в единое целое, координировать движения с учетом освоенного действия или переключать их в соответствии с меняющимися условиями"}, {"id": 2, "text": "способность организма продолжительное время выполнять работу на высоком уровне без снижения ее эффективности"}, {"id": 3, "text": "это способность организма преодолевать внешнее сопротивление или противодействовать ему за счет мышечных усилий"}, {"id": 4, "text": "это способность организма совершать двигательные действия в минимальное время"}], "correct_answer": "3"}]}, "22": {"variant": 22, "questions": [{"num": 1, "text": "Кто является специалистам физической подготовки (ст.13)?", "options": [{"id": 1, "text": "военнослужащие, имеющие образование в области физической культуры и спорта"}, {"id": 2, "text": "лица гражданского персонала ВС РФ, имеющих образование в области физической культуры"}, {"id": 3, "text": "военнослужащие имеющую квалификацию и находящиеся на должностях, подлежащих замещению специалистами физической подготовки"}, {"id": 4, "text": "военнослужащие, имеющие образование в области физической культуры и спорта"}], "correct_answer": "3"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «сила»?", "options": [{"id": 1, "text": "подтягивание на перекладине"}, {"id": 2, "text": "восхождение на платформу (тумбу)"}, {"id": 3, "text": "бег на 60 м с грузом"}, {"id": 4, "text": "толчок двух гирь"}, {"id": 5, "text": "подъем переворотом на перекладине"}, {"id": 6, "text": "комбинированное силовое упражнение на перекладине"}], "correct_answer": "1,4,5,6"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «быстрота»?", "options": [{"id": 1, "text": "подтягивание на перекладине"}, {"id": 2, "text": "челночный бег 10х10 м"}, {"id": 3, "text": "бег на 100м"}, {"id": 4, "text": "бег на 1 км"}, {"id": 5, "text": "бег на 800 м с оружием"}], "correct_answer": "2,3"}, {"num": 4, "text": "По какой команде выполняется упражнение №25.", "options": [{"id": 1, "text": "«ЗАНЯТЬ МЕСТА», «НА СТАРТ», « МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "« К выполнению упражнения ПРИСТУПИТЬ»"}, {"id": 4, "text": "«НА СТАРТ», « МАРШ»"}], "correct_answer": "4"}, {"num": 5, "text": "Назовите номер упражнения – Челночный бег 10×10 м.", "options": [{"id": 1, "text": "№19"}, {"id": 2, "text": "№21"}, {"id": 3, "text": "№70"}, {"id": 4, "text": "№17"}], "correct_answer": "1"}, {"num": 6, "text": "Выберите -какое количество баллов надо получить по одному упражнению на оценки «отлично», «хорошо», « удовлетворительно», курсантам 3 курса.", "options": [{"id": 1, "text": "65,55,45."}, {"id": 2, "text": "70,40,35"}, {"id": 3, "text": "70,65,55"}, {"id": 4, "text": "75,70,65"}], "correct_answer": "3"}, {"num": 7, "text": "Быстрота – это:", "options": [{"id": 1, "text": "Способность военнослужащего совершать двигательные действия в минимальное время. Основными формами проявления быстроты являются: скорость двигательной реакции, скорость отдельного движения, частота движений."}, {"id": 2, "text": "Возможность военнослужащего совершать двигательные действия в минимальное время. Основными формами проявления быстроты являются: скорость двигательной реакции, скорость отдельного движения, частота движений."}, {"id": 3, "text": "Основными формами про-явления быстроты являются: скорость двигательной реакции, скорость отдельного движения, частота движений."}], "correct_answer": "1"}, {"num": 8, "text": "Ловкость – это:", "options": [{"id": 1, "text": "это способность организма целесообразно согласовывать движения, организовывать их в единое целое, координировать движения с учетом освоенного действия или переключать их в соответствии с меняющимися условиями"}, {"id": 2, "text": "способность организма продолжительное время выполнять работу на высоком уровне без снижения ее эффективности"}, {"id": 3, "text": "это способность организма преодолевать внешнее сопротивление или противодействовать ему за счет мышечных усилий"}, {"id": 4, "text": "это способность организма совершать двигательные действия в минимальное время"}], "correct_answer": "1"}, {"num": 9, "text": "Оздоровительные силы природы (солнце, воздух и вода) являются:", "options": [{"id": 1, "text": "неестественными факторами, с которыми военнослужащие находятся в постоянном взаимодействии"}, {"id": 2, "text": "естественными факторами, с которыми военнослужащие находятся в постоянном взаимодействии"}, {"id": 3, "text": "естественными факторами, с которыми военнослужащие не находятся в постоянном взаимодействии"}], "correct_answer": "2"}, {"num": 10, "text": "Решение воспитательных задач обеспечивается:", "options": [{"id": 1, "text": "применением методов убеждения, примера, соревнования, поощрения, принуждения и воздействия коллектива"}, {"id": 2, "text": "применением способов убеждения, примера, соревнования, поощрения, принуждения и воздействия коллектива"}, {"id": 3, "text": "подбором физических упражнений, в которых психические свойства личности проявляются в наибольшей мере"}, {"id": 4, "text": "подбором физических упражнений, в которых психические свойства личности проявляются в наименьшей мере"}], "correct_answer": "1"}]}, "23": {"variant": 23, "questions": [{"num": 1, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «выносливость»?", "options": [{"id": 1, "text": "марш-бросок на 5 км"}, {"id": 2, "text": "бег на 800 м с оружием"}, {"id": 3, "text": "плавание на 500 м вольным стилем"}, {"id": 4, "text": "лыжная гонка на 5 км"}, {"id": 5, "text": "комплексное упражнение на ловкость"}], "correct_answer": "3,4"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «ловкость»?", "options": [{"id": 1, "text": "комплексное упражнение на ловкость"}, {"id": 2, "text": "передвижение по узкой опоре"}, {"id": 3, "text": "комбинированное упражнение на перекладине"}, {"id": 4, "text": "марш-бросок на 5 км"}, {"id": 5, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «ускоренное передвижение»?", "options": [{"id": 1, "text": "бег на 60 м с грузом"}, {"id": 2, "text": "бег в экипировке с автоматом"}, {"id": 3, "text": "челночный бег 10х10"}, {"id": 4, "text": "бег на 1 км"}, {"id": 5, "text": "бег на 5 км"}, {"id": 6, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2,6"}, {"num": 4, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «преодоление препятствий»?", "options": [{"id": 1, "text": "общее контрольное упражнение на единой полосе препятствий"}, {"id": 2, "text": "специальное контрольное упражнение для военнослужащих горных подразделений"}, {"id": 3, "text": "марш-бросок на 5 км"}, {"id": 4, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2"}, {"num": 5, "text": "Назовите Пороговый минимум в одном упражнении для курсантов 3 курса.", "options": [{"id": 1, "text": "32"}, {"id": 2, "text": "34"}, {"id": 3, "text": "38"}, {"id": 4, "text": "26"}], "correct_answer": "3"}, {"num": 6, "text": "Выберите номера упражнений направленных на развитие  физического качества  сила.", "options": [{"id": 1, "text": "1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16"}, {"id": 2, "text": "17,18,19,20,21,22,23"}, {"id": 3, "text": "23,24,25,26,27,28,29"}, {"id": 4, "text": "30,31,32,33,34,35,36,37,38"}], "correct_answer": "1"}, {"num": 7, "text": "Выберите номера упражнений направленных на развитие  физического качества быстрота.", "options": [{"id": 1, "text": "№17, №18, №19"}, {"id": 2, "text": "№31, №30, №25"}, {"id": 3, "text": "№ 44, №15, №36"}], "correct_answer": "1"}, {"num": 8, "text": "Тренировка физического упражнения направлена на:", "options": [{"id": 1, "text": "замещение у военнослужащих двигательных навыков и заключается в многократном повторении физического упражнения с постепенным усложнением условий его выполнения"}, {"id": 2, "text": "закрепление у военнослужащих двигательных навыков и заключается в однократном повторении физического упражнения с постепенным усложнением качества его выполнения"}, {"id": 3, "text": "закрепление у военнослужащих двигательных навыков и заключается в многократном повторении физического упражнения с постепенным усложнением условий его выполнения"}], "correct_answer": "2"}, {"num": 9, "text": "Развитию физических качеств и формированию военно-прикладных двигательных навыков у военнослужащих способствует:", "options": [{"id": 1, "text": "физическая подготовка, направленная на развитие физических качеств, формирование военно-прикладных двигательных навыков у военнослужащих с учетом их военно- профессиональной деятельности"}, {"id": 2, "text": "физическая подготовка, направленная на развитие физических качеств, формирование прикладных двигательных навыков у военнослужащих с учетом их профессиональной деятельности"}, {"id": 3, "text": "физическая подготовка, направленная на развитие физических качеств, формирование военно двигательных навыков у военнослужащих с учетом их военно деятельности"}], "correct_answer": "1"}, {"num": 10, "text": "Организацию физической подготовки в военно-учебном заведении регламентируют ряд руководящих документов:", "options": [{"id": 1, "text": "Федеральный закон от 4 декабря 2007 г. № 329-ФЗ «О физической культуре и спорте в Российской Федерации»"}, {"id": 2, "text": "Федеральный закон от 4 декабря 2017 г. № 323-ФЗ «О физической культуре в России»"}, {"id": 3, "text": "Приказ МО РФ от 30 мая 2022 г. № 308-ФЗ «Об организации образовательной деятельности в федеральных государственных организациях, осуществляемых образовательную деятельность и находящихся в ведении Министерства обороны Российской Федерации»"}, {"id": 4, "text": "Приказ МО РФ от 20 апреля 2023 г. № 230 «Об утверждении Наставления по физической подготовке в Вооруженных Силах Российской Федерации»"}, {"id": 5, "text": "Приказ МО РФ от 1 мая 2020 г. № 370-ФЗ «Об организации образовательной деятельности в федеральных государственных организациях, осуществляемых образовательную деятельность и находящихся в ведении Министерства обороны Российской Федерации»"}], "correct_answer": "2,4,5"}]}, "24": {"variant": 24, "questions": [{"num": 1, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «рукопашный бой»?", "options": [{"id": 1, "text": "комплекс приемов и действий рукопашного боя"}, {"id": 2, "text": "комплекс рукопашного боя на 8 счетов без оружия"}, {"id": 3, "text": "комплекс рукопашного боя начальный (РБ-Н)"}, {"id": 4, "text": "комплекс рукопашного боя с оружием на 8 счетов"}], "correct_answer": "1"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «военно-прикладное плавание»?", "options": [{"id": 1, "text": "плавание в обмундировании с оружием на 50 м"}, {"id": 2, "text": "плавание в обмундировании с оружием на 100 м"}, {"id": 3, "text": "ныряние в форме"}, {"id": 4, "text": "ныряние в длину и глубину"}, {"id": 5, "text": "плавание на 500 м вольным стилем"}, {"id": 6, "text": "плавание на 100 м вольным стилем"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «специальные приемы и действия»?", "options": [{"id": 1, "text": "комплексное упражнение «квадрат»"}, {"id": 2, "text": "бег с преодолением полосы препятствий"}, {"id": 3, "text": "метание гранаты на точность"}, {"id": 4, "text": "комплекс приемов и действий рукопашного боя"}, {"id": 5, "text": "плавание в обмундировании на 100 м"}], "correct_answer": "1,2,3"}, {"num": 4, "text": "На какое физическое качество направленно упражнение №14.", "options": [{"id": 1, "text": "быстрота"}, {"id": 2, "text": "сила"}, {"id": 3, "text": "ловкость"}, {"id": 4, "text": "выносливость"}], "correct_answer": "2"}, {"num": 5, "text": "Как называется общефизическое упражнение №14.", "options": [{"id": 1, "text": "Комплексное упражнение"}, {"id": 2, "text": "Жим штанги лежа"}, {"id": 3, "text": "Приседание со штангой"}, {"id": 4, "text": "Становая тяга со штангой"}], "correct_answer": "2"}, {"num": 6, "text": "По какой команде выполняется упражнение №14.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "2"}, {"num": 7, "text": "Как называется  общефизическое упражнение №2.", "options": [{"id": 1, "text": "отжимание"}, {"id": 2, "text": "подъем силой на перекладине"}, {"id": 3, "text": "наклоны туловища вперед согнув ноги"}, {"id": 4, "text": "вис на перекладине"}, {"id": 5, "text": "наклоны  туловища вперед"}], "correct_answer": "5"}, {"num": 8, "text": "Концептуальные основы системы физической подготовки войск являются:", "options": [{"id": 1, "text": "отражением требований современного боя к психологическому состоянию личного состава, а также реальных возможностей обеспечения умственной готовности военнослужащих к повседневной деятельности"}, {"id": 2, "text": "отражением требований современного боя к физическому состоянию личного состава, а также реальных возможностей обеспечения физической готовности военнослужащих к боевой деятельности"}, {"id": 3, "text": "образованная в соответствии с требованиями боевой деятельности к физическому состоянию личного состава система физической подготовки"}], "correct_answer": "3"}, {"num": 9, "text": "Целью физической подготовки является:", "options": [{"id": 1, "text": "обеспечение необходимого уровня физической подготовленности военнослужащих, для выполнения боевых и других задач в соответствии с их предназначением"}, {"id": 2, "text": "успешное выполнение военнослужащими своих служебных обязанностей"}, {"id": 3, "text": "успешное выполнение военнослужащими своих повседневных обязанностей"}], "correct_answer": "2"}, {"num": 10, "text": "Развитию физических качеств и формированию военно-прикладных двигательных навыков у военнослужащих способствует:", "options": [{"id": 1, "text": "физическая подготовка, направленная на развитие физических качеств, формирование военно-прикладных двигательных навыков у военнослужащих с учетом их военно- профессиональной деятельности"}, {"id": 2, "text": "физическая подготовка, направленная на развитие физических качеств, формирование прикладных двигательных навыков у военнослужащих с учетом их профессиональной деятельности"}, {"id": 3, "text": "физическая подготовка, направленная на развитие физических качеств, формирование военно двигательных навыков у военнослужащих с учетом их военно деятельности"}], "correct_answer": "1"}]}, "25": {"variant": 25, "questions": [{"num": 1, "text": "Что включат в себя организация физической подготовки?", "options": [{"id": 1, "text": "планирование и проведение мероприятий физической подготовки"}, {"id": 2, "text": "постановку задач исполнителям, организацию взаимодействия и всестороннее обеспечение их действий"}, {"id": 3, "text": "ведение учета физической подготовки"}, {"id": 4, "text": "контроль за ходом выполнения поставленных задач"}, {"id": 5, "text": "медицинское обеспечение"}, {"id": 6, "text": "подготовку должностных лиц, осуществляющих проведение физической подготовки с военнослужащими"}, {"id": 7, "text": "представление отчетности"}, {"id": 8, "text": "анализ результатов и подведение итогов"}, {"id": 9, "text": "осуществление контроля проведения мероприятий физической подготовки в подразделениях и оказание помощи руководителям занятий по физической подготовке"}], "correct_answer": "1,3,6,9"}, {"num": 2, "text": "Какой приказ МО РФ определяет порядок организации физической подготовки военнослужащих ВС РФ?", "options": [{"id": 1, "text": "Приказ Министра обороны РФ от 20.04.2023 г. №230 «Об утверждении Наставления по физической подготовке в ВС РФ»"}, {"id": 2, "text": "Приказ Министра обороны РФ от 21.04.2009 г. №200 «Об утверждении Наставления по физической подготовке в ВС РФ»"}, {"id": 3, "text": "Распоряжение Правительства РФ от 24.11.2020 г. № 3081-р «Об утверждении Стратегии развития физической культуры и спорта в РФ на период до 2030 года»"}, {"id": 4, "text": "Распоряжение Правительства РФ от 17.10.2018 г. № 2245-р «Об утверждении Концепции подготовки спортивного резерва в РФ до 2025 года»"}], "correct_answer": "1"}, {"num": 3, "text": "Укажите продолжительность учебных занятий по физической подготовке для курсантов, проходящих обучение в образовательных организациях высшего образования МО РФ в соответствии с НФП-2023:", "options": [{"id": 1, "text": "45 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 2, "text": "не менее 4 учебных часов в неделю"}, {"id": 3, "text": "4 академических часа в неделю"}, {"id": 4, "text": "4 академических часа в неделю, из которых 2 академических часа – на аудиторное занятие, 2 – на самостоятельную работу"}], "correct_answer": "3"}, {"num": 4, "text": "На какое физическое качество направленно упражнение №2.", "options": [{"id": 1, "text": "выносливость"}, {"id": 2, "text": "быстрота"}, {"id": 3, "text": "сила"}, {"id": 4, "text": "выносливость"}], "correct_answer": "3"}, {"num": 5, "text": "Назовите номер упражнения – Наклоны туловища вперед.", "options": [{"id": 1, "text": "№3"}, {"id": 2, "text": "№67"}, {"id": 3, "text": "№7"}, {"id": 4, "text": "№2"}], "correct_answer": "4"}, {"num": 6, "text": "По какой команде выполняется упражнение №2.", "options": [{"id": 1, "text": "«ВПЕРЕД»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}, {"id": 4, "text": "«ВНИМАНИЕ»,  «МАРШ»."}], "correct_answer": "3"}, {"num": 7, "text": "Задачами физической подготовки являются:", "options": [{"id": 1, "text": "развитие физических качеств у военнослужащих"}, {"id": 2, "text": "формирование и совершенствование у военнослужащих военно-прикладных двигательных навыков"}, {"id": 3, "text": "получение теоретических знаний и формирование методических умений военнослужащих для проведения мероприятий физической подготовки"}, {"id": 4, "text": "развитие и совершенствование физических качеств (выносливости, силы, быстроты и ловкости) с учетом возрастных особенностей"}], "correct_answer": "1,2,3"}, {"num": 8, "text": "Принцип прикладности выражает:", "options": [{"id": 1, "text": "основное предназначение физической подготовки войск – готовить военнослужащих к успешному выполнению учебно-боевых и боевых задач"}, {"id": 2, "text": "воспитания военнослужащих – созданием конкретных боевых ситуаций"}, {"id": 3, "text": "развитие военнослужащих – акцентированием совершенствования особо важных специальных качеств"}], "correct_answer": "1"}, {"num": 9, "text": "В системе управления физической подготовкой военнослужащих реализация принципа прикладности достигается:", "options": [{"id": 1, "text": "в руководстве – принятием глубоко продуманных и всесторонне обоснованных решений"}, {"id": 2, "text": "в организации – более полным учётом периодизации военно-профессиональной деятельности военнослужащих различных воинских специальностей; подчинением содержания занятий по физической подготовке содержанию занятий по тактической (тактико-специальной) подготовке"}, {"id": 3, "text": "в обеспечении – строительством и оборудованием таких спортивных объектов и мест для занятий физической подготовкой и спортом, которые позволяют в массовом порядке выполнять различные военно-прикладные упражнения из различных разделов физической подготовки"}, {"id": 4, "text": "в проведении – преимущественным проведением комплексных занятий и тренировок"}], "correct_answer": "4"}, {"num": 10, "text": "Физические упражнения – это:", "options": [{"id": 1, "text": "движения, выполняемые с целью улучшения физического состояния военнослужащих"}, {"id": 2, "text": "движения на снарядах"}, {"id": 3, "text": "движения, выполняемые с целью поднятия физического здоровья военнослужащих"}], "correct_answer": "1"}]}, "26": {"variant": 26, "questions": [{"num": 1, "text": "Укажите продолжительность спортивно-массовой работы для курсантов, проходящих обучение в образовательных организациях высшего образования МО РФ в соответствии с НФП-2023:", "options": [{"id": 1, "text": "не менее 4 учебных часов в неделю"}, {"id": 2, "text": "2 раза в неделю по 50 минут в рабочие дни в свободное от занятий время и не менее 3-х часов в выходные и нерабочие праздничные дни"}, {"id": 3, "text": "не менее 3-х часов в выходные и нерабочие праздничные дни"}], "correct_answer": "2"}, {"num": 2, "text": "Определите категории военнослужащих в зависимости от особенностей военно-профессиональной деятельности в соответствии с НФП-2023:", "options": [{"id": 1, "text": "военнослужащие, проходящие военную службу в органах военного управления, управлениях соединений, управлениях воинских частей, управлениях батальонов (им равных), научных организациях Вооруженных Сил (военных учебных центрах), военных представительствах, главных центрах (центрах, арсеналах, базах, отделах) видов обеспечения, центрах управления, лабораториях специального контроля, вузах на должностях постоянного и переменного состава (за исключением курсантов), учебных воинских частях на должностях постоянного состава, на пунктах отбора на военную службу по контракту, в военных комиссариатах, медицинских организациях Вооруженных Сил, военных оркестрах (ансамблях), фельдъегерской почтовой службе"}, {"id": 2, "text": "военнослужащие, проходящие военную службу в подразделениях: топогеодезических, метеорологических (гидрометеорологических), материально-технического обеспечения, медицинских, предупреждения о ракетном нападении и разведки космической обстановки, испытательных центров (полигонов), аэродромно-технического обеспечения, переменный состав учебных воинских частей"}, {"id": 3, "text": "военнослужащие, проходящие военную службу в основных подразделениях и подразделениях обеспечения воинских частей видов Вооруженных Сил, родов войск Вооруженных Сил и не входящих в них, кроме военнослужащих подразделений, указанных в категориях № 2 и 3"}, {"id": 4, "text": "военнослужащие подразделений, не входящих в категории № 1 и 2"}], "correct_answer": "1-3; 2-2\n3-1; 4-3"}, {"num": 3, "text": "Для проверки уровня физической подготовленности военнослужащие женского пола распределяются на возрастные группы (указать соответствие для всех вариантов ответа):", "options": [{"id": 1, "text": "25-29 лет"}, {"id": 2, "text": "до 25 лет"}, {"id": 3, "text": "35-39 лет"}, {"id": 4, "text": "30-34 года"}, {"id": 5, "text": "40-44 года"}, {"id": 6, "text": "45-49 лет"}, {"id": 7, "text": "50 и старше"}, {"id": 8, "text": "отсутствует"}, {"id": 9, "text": "отсутствует"}], "correct_answer": "1-2; 2-1\n3-4; 4-3\n5-5; 6-6\n7-7"}, {"num": 4, "text": "Для оценки уровня физической подготовленности курсанты выполняют физические упражнения, входящие в программы обучения, при этом количество физических упражнений должно соответствовать (указать соответствие для всех вариантов ответа):", "options": [{"id": 1, "text": "4 физических упражнения, из которых 3ОФУ (на быстроту или ловкость, силу, выносливость) и 1 СФУ"}, {"id": 2, "text": "5 физических упражнений, из которых 3ОФУ (на ловкость, силу, выносливость или быстроту, силу ловкость) и 2 СФУ"}, {"id": 3, "text": "3 физических упражнения, из которых 2 ОФУ (на быстроту или ловкость, силу либо на быстроту или ловкость, выносливость либо на силу, выносливость) и 1 СФУ"}, {"id": 4, "text": "2 физических упражнения, все ОФУ (на быстроту, или ловкость, или силу, выносливость)"}], "correct_answer": "2"}, {"num": 5, "text": "Назовите номер упражнения – Прыжки на скакалке", "options": [{"id": 1, "text": "№31"}, {"id": 2, "text": "№45"}, {"id": 3, "text": "№12"}, {"id": 4, "text": "№13"}], "correct_answer": "1"}, {"num": 6, "text": "Как называется упражнение №31.", "options": [{"id": 1, "text": "восхождение на платформу (тумбу)"}, {"id": 2, "text": "комбинированное упражнение на брусьях"}, {"id": 3, "text": "прыжки со скакалкой"}, {"id": 4, "text": "комплексное упражнение на ловкость"}], "correct_answer": "3"}, {"num": 7, "text": "По какой команде выполняется упражнение №31.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "3"}, {"num": 8, "text": "Техникой физических упражнений называются:", "options": [{"id": 1, "text": "Способы выполнения упражнений, обеспечивающие их мощную эффективность"}, {"id": 2, "text": "Способы выполнения упражнений, обеспечивающие их наибольшую эффективность"}, {"id": 3, "text": "Способы выполнения упражнений, обеспечивающие их качественную эффективность"}], "correct_answer": "2"}, {"num": 9, "text": "Физическая культура это:", "options": [{"id": 1, "text": "сфера социально-культурной деятельности как совокупность видов спорта, сложившаяся в форме соревнований и специальной практики подготовки человека к ним"}, {"id": 2, "text": "процесс, направленный на воспитание личности, развитие физических возможностей человека, приобретение им умений и знаний в области физической культуры и спорта в целях формирования всесторонне развитого и физически здорового человека с высоким уровнем физической культуры"}, {"id": 3, "text": "часть культуры, представляющая собой совокупность ценностей, норм и знаний, создаваемых и используемых обществом в целях физического и интеллектуального развития способностей человека, совершенствования его двигательной активности и формирования здорового образа жизни, социальной адаптации путем физического воспитания, физической подготовки и физического развития"}], "correct_answer": "3"}, {"num": 10, "text": "Какой нормативно-правовой документ устанавливает правовые, организационные, экономические и социальные основы деятельности в области физической культуры и спорта в РФ?", "options": [{"id": 1, "text": "ФЗ от 04.12.2007 №329-ФЗ (ред. от 24.06.2023) «О физической культуре и спорте в РФ»"}, {"id": 2, "text": "Приказ МО РФ от 20.04.2023 №230 «Об утверждении Наставления по физической подготовке в ВС РФ»"}], "correct_answer": "1"}]}, "27": {"variant": 27, "questions": [{"num": 1, "text": "Для проверки уровня физической подготовленности профессорско-преподавательским составом в период промежуточной аттестации составляется:", "options": [{"id": 1, "text": "программа проведения практической части проведения зачета/экзамена"}, {"id": 2, "text": "контрольно-проверочные комплексы"}, {"id": 3, "text": "приказ проведения контрольной проверки курсантов"}], "correct_answer": "2"}, {"num": 2, "text": "Уровень развития каждого физического качества и формирования военно-прикладного двигательного навыка проверяется по:", "options": [{"id": 1, "text": "2 общефизическим упражнениям"}, {"id": 2, "text": "1 физическому упражнению"}, {"id": 3, "text": "3 специальным физическим упражнениям"}], "correct_answer": "2"}, {"num": 3, "text": "Проверка уровня физической подготовленности военнослужащего проводится:", "options": [{"id": 1, "text": "1 день"}, {"id": 2, "text": "4 дня"}, {"id": 3, "text": "3 дня"}, {"id": 4, "text": "до 2 дней"}], "correct_answer": "4"}, {"num": 4, "text": "Назовите номер упражнения- Общее контрольное упражнение на единой полосе препятствий.", "options": [{"id": 1, "text": "45"}, {"id": 2, "text": "46"}, {"id": 3, "text": "47"}, {"id": 4, "text": "48"}], "correct_answer": "1"}, {"num": 5, "text": "Как называется  общефизическое упражнение №45.", "options": [{"id": 1, "text": "Общее контрольное упражнение на единой полосе препятствий"}, {"id": 2, "text": "Марш бросок на лыжах на 5 км"}, {"id": 3, "text": "Марш бросок на 5 км"}, {"id": 4, "text": "Бег на 800 м с оружием"}], "correct_answer": "1"}, {"num": 6, "text": "По какой команде выполняется упражнение №45.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "3"}, {"num": 7, "text": "Дистанция упражнения-№45.", "options": [{"id": 1, "text": "200 м"}, {"id": 2, "text": "800 м"}, {"id": 3, "text": "5 км"}, {"id": 4, "text": "400 м"}], "correct_answer": "4"}, {"num": 8, "text": "Из каких оценок складывается оценка курсанта образовательной организации по учебной дисциплине «Физическая подготовка»?", "options": [{"id": 1, "text": "оценки по теоретической подготовленности"}, {"id": 2, "text": "оценки по методической подготовленности"}, {"id": 3, "text": "оценки уровень физической подготовленности"}, {"id": 4, "text": "оценки по практической подготовленности"}], "correct_answer": "1,2,3"}, {"num": 9, "text": "Какое количество баллов необходимо набрать курсанту 3 курса  в пяти упражнениях, чтобы получить оценку «отлично» за уровень физической подготовленности?", "options": [{"id": 1, "text": "360"}, {"id": 2, "text": "370"}, {"id": 3, "text": "380"}, {"id": 4, "text": "390"}], "correct_answer": "1"}, {"num": 10, "text": "Циклические упражнения представляют собой:", "options": [{"id": 1, "text": "цепь периодически повторяющихся действий, при выполнении которых тело человека и его части каждый раз оказываются в разных исходных положениях (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}, {"id": 2, "text": "двигательные действия, при выполнении которых отсутствует смежная повторяемость стандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}, {"id": 3, "text": "цепь периодически повторяющихся движений или действий, при выполнении которых тело человека и его части каждый раз оказываются в одном и том же исходном положении (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}], "correct_answer": "2"}]}, "28": {"variant": 28, "questions": [{"num": 1, "text": "Проверка уровня физической подготовленности военнослужащего проводится:", "options": [{"id": 1, "text": "1 день"}, {"id": 2, "text": "4 дня"}, {"id": 3, "text": "3 дня"}, {"id": 4, "text": "до 2 дней"}], "correct_answer": "4"}, {"num": 2, "text": "Укажите последовательность выполнения физических упражнений на проверке:", "options": [{"id": 1, "text": "упражнения на силу"}, {"id": 2, "text": "специальные приемы и действия, метание гранаты"}, {"id": 3, "text": "комплексные упражнения"}, {"id": 4, "text": "военно-прикладное плавание"}, {"id": 5, "text": "упражнения на выносливость"}, {"id": 6, "text": "комплексы рукопашного боя"}, {"id": 7, "text": "упражнения на быстроту"}, {"id": 8, "text": "марш-броски, марш-броски на лыжах"}, {"id": 9, "text": "упражнения на ловкость"}], "correct_answer": "1-3; 2-6\n3-9; 4-8\n5-4; 6-5\n7-2; 8-7\n9-1"}, {"num": 3, "text": "Укажите последовательность выполнения физических упражнений при выполнении общеразвивающих упражнений на месте:", "options": [{"id": 1, "text": "упражнения для мышц рук и плечевого пояса"}, {"id": 2, "text": "упражнения для мышц ног"}, {"id": 3, "text": "упражнения для мышц всего тела"}, {"id": 4, "text": "подтягивающие упражнения"}, {"id": 5, "text": "упражнения в прыжках"}], "correct_answer": "1-2; 2-3\n3-4; 4-1\n5-5;"}, {"num": 4, "text": "Назовите номер упражнения – метание гранат на точность.", "options": [{"id": 1, "text": "№69"}, {"id": 2, "text": "№31"}, {"id": 3, "text": "№68"}, {"id": 4, "text": "№70"}], "correct_answer": "1"}, {"num": 5, "text": "Как называется упражнение № 69.", "options": [{"id": 1, "text": "Метание гранат на точность"}, {"id": 2, "text": "Вис на перекладине"}, {"id": 3, "text": "Поднимание ящика для боеприпасов"}, {"id": 4, "text": "Упор лежа на предплечьях"}], "correct_answer": "1"}, {"num": 6, "text": "По какой команде выполняется упражнение №69.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "Гранатой огонь"}, {"num": 7, "text": "Ациклические упражнения –  это", "options": [{"id": 1, "text": "цепь периодически повторяющихся движений или действий, при выполнении которых тело человека и его части каждый раз оказываются в одном и том же исходном положении (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}, {"id": 2, "text": "такие двигательные действия, при выполнении которых отсутствует смежная повторяемость стандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}, {"id": 3, "text": "такие двигательные действия, при выполнении которых отсутствует нужная повторяемость нестандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}], "correct_answer": "2"}, {"num": 8, "text": "Назовите какое минимальное количество баллов, необходимо набрать в одном упражнении курсанту 3 курса, чтобы не получить оценку «неудовлетворительно» за уровень физической подготовленности?", "options": [{"id": 1, "text": "38"}, {"id": 2, "text": "36"}, {"id": 3, "text": "34"}, {"id": 4, "text": "32"}], "correct_answer": "1"}, {"num": 9, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в пяти упражнениях, чтобы получить второй квалификационный уровень физической подготовленности?", "options": [{"id": 1, "text": "370"}, {"id": 2, "text": "360"}, {"id": 3, "text": "350"}, {"id": 4, "text": "340"}], "correct_answer": "1"}, {"num": 10, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в пяти упражнениях, чтобы получить оценку «отлично» за уровень физической подготовленности?", "options": [{"id": 1, "text": "360"}, {"id": 2, "text": "370"}, {"id": 3, "text": "380"}, {"id": 4, "text": "390"}], "correct_answer": "1"}]}, "29": {"variant": 29, "questions": [{"num": 1, "text": "В каких случаях преподаватель (руководитель занятия) разучивает физическое упражнение с помощью подготовительных упражнений?", "options": [{"id": 1, "text": "если физическое упражнение несложное, доступное для обучаемых или его выполнение по элементам невозможно"}, {"id": 2, "text": "если физическое упражнение сложное и его можно разделить на отдельные элементы"}, {"id": 3, "text": "если физическое упражнение сложное и его можно выполнить с остановками"}, {"id": 4, "text": "если в целом из-за трудности его выполнить нельзя, а разделить на части невозможно"}], "correct_answer": "4"}, {"num": 2, "text": "В каких случаях преподаватель (руководитель занятия) разучивает физическое упражнение в целом?", "options": [{"id": 1, "text": "если физическое упражнение несложное, доступное для обучаемых или его выполнение по элементам невозможно"}, {"id": 2, "text": "если физическое упражнение сложное и его можно разделить на отдельные элементы"}, {"id": 3, "text": "если физическое упражнение сложное и его можно выполнить с остановками"}, {"id": 4, "text": "если в целом из-за трудности его выполнить нельзя, а разделить на части невозможно"}], "correct_answer": "1"}, {"num": 3, "text": "Укажите продолжительность УФЗ для военнослужащих, проходящих военную службу по призыву и проходящих обучение в военно-учебных заведениях на воинских должностях курсантов в соответствии с НФП-2023?", "options": [{"id": 1, "text": "30 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 2, "text": "45 минут ежедневно, кроме выходных и нерабочих праздничных дней"}, {"id": 3, "text": "30-50 минут ежедневно, кроме выходных и нерабочих праздничных дней"}], "correct_answer": "1"}, {"num": 4, "text": "Что определяет Наставление по физической подготовке в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "порядок организации физической подготовки военнослужащих Вооружённых Сил Российской Федерации (ВС РФ), в том числе требования к уровню физической подготовленности военнослужащих ВС РФ;"}, {"id": 2, "text": "систему физической подготовки в ВС РФ;"}, {"id": 3, "text": "требования по уровню физической подготовки граждан РФ, иностранных граждан, поступающих на военную службу по контракту."}], "correct_answer": "1,3"}, {"num": 5, "text": "Назовите номер упражнения – Приседание со штангой.", "options": [{"id": 1, "text": "№16"}, {"id": 2, "text": "№21"}, {"id": 3, "text": "№35"}, {"id": 4, "text": "№69"}], "correct_answer": "1"}, {"num": 6, "text": "Как называется  упражнение №25.", "options": [{"id": 1, "text": "Бег на 3 км"}, {"id": 2, "text": "Бег на 1 км"}, {"id": 3, "text": "Лыжная гонка на 5 км"}, {"id": 4, "text": "Бег на 400 м"}], "correct_answer": "1"}, {"num": 7, "text": "Назовите номер упражнения – Комбинированное силовое упражнение на перекладине.", "options": [{"id": 1, "text": "№5"}, {"id": 2, "text": "№19"}, {"id": 3, "text": "№2"}, {"id": 4, "text": "№7"}], "correct_answer": "4"}, {"num": 8, "text": "Для чего предназначена спортивно массовая работа ?", "options": [{"id": 1, "text": "для организации и проведения физкультурно-спортивных мероприятий, повышения физической подготовленности, организации досуга и пропаганды здорового образа жизни"}, {"id": 2, "text": "для проведения с военнослужащими массовых спортивных мероприятий и пропаганды здорового образа жизни"}], "correct_answer": "1"}, {"num": 9, "text": "По каким показателям проверяется уровень методической подготовленности?", "options": [{"id": 1, "text": "отлично» - если выполнено 6 показателей методического задания; «хорошо» - если выполнено 5 показателя методического задания; «удовлетворительно» - если выполнено 4 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}, {"id": 2, "text": "«отлично» - если выполнено 4 показателей методического задания; «хорошо» - если выполнено 3 показателя методического задания; «удовлетворительно» - если выполнено 2 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}, {"id": 3, "text": "«отлично» - если выполнено 5 показателей методического задания; «хорошо» - если выполнено 4 показателя методического задания; «удовлетворительно» - если выполнено 3 показателя методического задания; «неудовлетворительно» - если не выполнены условия на оценку «удовлетворительно»."}], "correct_answer": "3"}, {"num": 10, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в пяти упражнениях, чтобы получить оценку «хорошо» за уровень физической подготовленности?", "options": [{"id": 1, "text": "320"}, {"id": 2, "text": "310"}, {"id": 3, "text": "300"}, {"id": 4, "text": "290"}], "correct_answer": "1"}]}, "30": {"variant": 30, "questions": [{"num": 1, "text": "На что направлена физическая подготовка военнослужащих в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "на развитие физических качеств;"}, {"id": 2, "text": "на формирование военно-прикладных двигательных навыков;"}, {"id": 3, "text": "на получение теоретических знаний у военнослужащих;"}, {"id": 4, "text": "на формирование методических умений у военнослужащих;"}], "correct_answer": "1,2"}, {"num": 2, "text": "Когда проводится физическая подготовка?", "options": [{"id": 1, "text": "мирное время"}, {"id": 2, "text": "военное время"}, {"id": 3, "text": "во время частичной мобилизации в РФ"}], "correct_answer": "1,2"}, {"num": 3, "text": "Какие элементы системы физической подготовки являются основными?", "options": [{"id": 1, "text": "цель, задачи"}, {"id": 2, "text": "объект, предмет"}, {"id": 3, "text": "гипотеза"}, {"id": 4, "text": "результат, организация"}], "correct_answer": "1,2,4"}, {"num": 4, "text": "Как называется упражнение №7.", "options": [{"id": 1, "text": "вис на перекладине"}, {"id": 2, "text": "подьем силой на перекладине"}, {"id": 3, "text": "сгибание и разгибание рук в упоре лежа"}, {"id": 4, "text": "комбинированное силовое упражнение на перекладине"}], "correct_answer": "4"}, {"num": 5, "text": "По какой команде выполняется упражнение №7.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "2"}, {"num": 6, "text": "Какой высоты должна быть платформа (тумба) в упражнении №29", "options": [{"id": 1, "text": "55 см"}, {"id": 2, "text": "30 см"}, {"id": 3, "text": "20 см"}, {"id": 4, "text": "40 см"}], "correct_answer": "2"}, {"num": 7, "text": "Что включает в себя спортивно массовая работа в воинской части (вузе)?", "options": [{"id": 1, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы.\n. Военно-спортивный комплекс."}, {"id": 2, "text": "Учебно-тренировочные занятия по видам спорта. Спортивные и военно-спортивные соревнования. Смотры спортивной работы.\nФизкультурные праздники и показательные спортивные выступления.."}, {"id": 3, "text": "Учебно-тренировочные занятия по видам спорта. Смотры спортивной работы.\nФизкультурные праздники и показательные спортивные выступления. Военно-спортивный комплекс."}], "correct_answer": "1"}, {"num": 8, "text": "На что направлены учебно-тренировочные занятия в сборных командах воинской части, вузах?", "options": [{"id": 1, "text": "учебно-тренировочные занятия с военнослужащими по подготовке к соревнованиям, проводимым по плану старшего командира (начальника);"}, {"id": 2, "text": "тренировка в выполнении физических упражнений Наставления, входящих в программу обучения;"}, {"id": 3, "text": "учебно-тренировочные сборы по подготовке сборных команд по видам спорта к соревнованиям, проводимым по плану старшего командира (начальника)"}], "correct_answer": "1"}, {"num": 9, "text": "Физические упражнения – это:", "options": [{"id": 1, "text": "средства физической подготовки, являются движения и действия используемые с целью улучшения физического состояния военнослужащих"}, {"id": 2, "text": "форма физической подготовки, являются движения и действия используемые с целью улучшения физического состояния военнослужащих"}, {"id": 3, "text": "методы физической подготовки, являются движения и действия используемые с целью улучшения физического состояния военнослужащих"}], "correct_answer": "3"}, {"num": 10, "text": "К принципам физического воспитания относятся:", "options": [{"id": 1, "text": "Философские принципы"}, {"id": 2, "text": "Основополагающие принципы физической культуры"}, {"id": 3, "text": "Вспомогательные принципы физической культуры"}, {"id": 4, "text": "Общепедагогические принципы физического воспитания"}, {"id": 5, "text": "Специфические принципы, выражающие закономерности методики развития физических качеств и двигательных способностей"}], "correct_answer": "4,5"}]}, "31": {"variant": 31, "questions": [{"num": 1, "text": "Что определяет Наставление по физической подготовке в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "порядок организации физической подготовки военнослужащих Вооружённых Сил Российской Федерации (ВС РФ), в том числе требования к уровню физической подготовленности военнослужащих ВС РФ"}, {"id": 2, "text": "систему физической подготовки в ВС РФ"}, {"id": 3, "text": "требования по уровню физической подготовки граждан РФ, иностранных граждан, поступающих на военную службу по контракту"}], "correct_answer": "1,3"}, {"num": 2, "text": "На что направлена физическая подготовка военнослужащих в Вооруженных Силах Российской Федерации?", "options": [{"id": 1, "text": "на развитие физических качеств"}, {"id": 2, "text": "на формирование военно-прикладных двигательных навыков"}, {"id": 3, "text": "на получение теоретических знаний у военнослужащих"}, {"id": 4, "text": "на формирование методических умений у военнослужащих"}], "correct_answer": "1"}, {"num": 3, "text": "Когда проводится физическая подготовка?", "options": [{"id": 1, "text": "мирное время"}, {"id": 2, "text": "военное время"}, {"id": 3, "text": "во время частичной мобилизации в РФ"}], "correct_answer": "1,2"}, {"num": 4, "text": "Какие элементы системы физической подготовки являются основными?", "options": [{"id": 1, "text": "цель, задачи"}, {"id": 2, "text": "объект, предмет"}, {"id": 3, "text": "гипотеза"}, {"id": 4, "text": "результат, организация"}], "correct_answer": "1,2,4"}, {"num": 5, "text": "Выберите -какое количество баллов надо получить по одному упражнению \nна оценки «отлично», «хорошо», « удовлетворительно», курсантам 3 курса.", "options": [{"id": 1, "text": "65,55,45"}, {"id": 2, "text": "70,40,35"}, {"id": 3, "text": "70,65,55"}, {"id": 4, "text": "75,70,65"}], "correct_answer": "3"}, {"num": 6, "text": "Назовите Пороговый минимум в одном упражнении \nдля курсантов 3 курса.", "options": [{"id": 1, "text": "32"}, {"id": 2, "text": "34"}, {"id": 3, "text": "38"}, {"id": 4, "text": "26"}], "correct_answer": "3"}, {"num": 7, "text": "Выберите номера упражнений, направленных на развитие\n физического качества сила.", "options": [{"id": 1, "text": "7,5,19,17,6"}, {"id": 2, "text": "18,21,53,67,2"}, {"id": 3, "text": "3,12,7,1,5"}, {"id": 4, "text": "2,25,41,4,21"}], "correct_answer": "3"}, {"num": 8, "text": "Организацию физической подготовки в военно-учебном заведении регламентируют ряд руководящих документов:", "options": [{"id": 1, "text": "Федеральный закон от 4 декабря 2007 г. № 329-ФЗ «О физической культуре и спорте в Российской Федерации»"}, {"id": 2, "text": "Федеральный закон от 4 декабря 2017 г. № 323-ФЗ «О физической культуре в России»"}, {"id": 3, "text": "Приказ МО РФ от 30 мая 2022 г. № 308-ФЗ «Об организации образовательной деятельности в федеральных государственных организациях, осуществляемых образовательную деятельность и находящихся в ведении Министерства обороны Российской Федерации»"}, {"id": 4, "text": "Приказ МО РФ от 20 апреля 2023 г. № 230 «Об утверждении Наставления по физической подготовке в Вооруженных Силах Российской Федерации»"}, {"id": 5, "text": "Приказ МО РФ от 1 мая 2020 г. № 370-ФЗ «Об организации образовательной деятельности в федеральных государственных организациях, осуществляемых образовательную деятельность и находящихся в ведении Министерства обороны Российской Федерации»"}], "correct_answer": "2,4,5"}, {"num": 9, "text": "Концептуальные основы системы физической подготовки войск являются:", "options": [{"id": 1, "text": "отражением требований современного боя к психологическому состоянию личного состава, а также реальных возможностей обеспечения умственной готовности военнослужащих к повседневной деятельности"}, {"id": 2, "text": "отражением требований современного боя к физическому состоянию личного состава, а также реальных возможностей обеспечения физической готовности военнослужащих к боевой деятельности"}, {"id": 3, "text": "образованная в соответствии с требованиями боевой деятельности к физическому состоянию личного состава система физической подготовки"}], "correct_answer": "3"}, {"num": 10, "text": "Целью физической подготовки является:", "options": [{"id": 1, "text": "обеспечение необходимого уровня физической подготовленности военнослужащих, для выполнения боевых и других задач в соответствии с их предназначением"}, {"id": 2, "text": "успешное выполнение военнослужащими своих служебных обязанностей"}, {"id": 3, "text": "успешное выполнение военнослужащими своих повседневных обязанностей"}], "correct_answer": "2"}]}, "32": {"variant": 32, "questions": [{"num": 1, "text": "Цель физической подготовки?", "options": [{"id": 1, "text": "успешное выполнение военнослужащими своих служебных обязанностей"}, {"id": 2, "text": "обеспечение необходимого уровня физической подготовленности военнослужащих для выполнения боевых и других задач в соответствии с их предназначением"}, {"id": 3, "text": "повышение устойчивости организма к воздействию неблагоприятных факторов военно-профессиональной деятельности и окружающей среды"}, {"id": 4, "text": "воспитание психической устойчивости и морально-волевых качеств"}], "correct_answer": "1"}, {"num": 2, "text": "Что является задачами физической подготовки?", "options": [{"id": 1, "text": "развитие физических качеств у военнослужащих"}, {"id": 2, "text": "формирование и совершенствование у военнослужащих военно-прикладных двигательных навыков"}, {"id": 3, "text": "получение теоретических знаний и формирование методических умений военнослужащих для проведения мероприятий физической подготовки"}, {"id": 4, "text": "развитие и совершенствование физических качеств (выносливости, силы, быстроты и ловкости) с учетом возрастных особенностей"}, {"id": 5, "text": "формирование навыков в передвижении по пересеченной местности в пешем порядке и на лыжах, в преодолении естественных и искусственных препятствий, рукопашном бою, военно-прикладном плавании"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Кто является объектом физической подготовки?", "options": [{"id": 1, "text": "должностные лица, осуществляющие организацию и проведение физической подготовки с военнослужащими"}, {"id": 2, "text": "военнослужащие, занимающиеся физической подготовкой"}, {"id": 3, "text": "командиры структурных подразделений"}], "correct_answer": "2"}, {"num": 4, "text": "Кто является субъектом физической подготовки?", "options": [{"id": 1, "text": "должностные лица, осуществляющие организацию и проведение физической подготовки с военнослужащими"}, {"id": 2, "text": "военнослужащие, занимающиеся физической подготовкой"}, {"id": 3, "text": "командиры структурных подразделений"}], "correct_answer": "1"}, {"num": 5, "text": "Выберите номера упражнений направленных на развитие физического качества быстрота.", "options": [{"id": 1, "text": "33, 30,35,31,34"}, {"id": 2, "text": "3,5,7,1,19"}, {"id": 3, "text": "20,19,21,17"}, {"id": 4, "text": "2,25,41,4,33"}], "correct_answer": "3"}, {"num": 6, "text": "Назовите номер упражнения – Жим штанги лежа.", "options": [{"id": 1, "text": "№14"}, {"id": 2, "text": "№15"}, {"id": 3, "text": "№16"}, {"id": 4, "text": "№17"}], "correct_answer": "1"}, {"num": 7, "text": "На какое физическое качество направленно упражнение №14.", "options": [{"id": 1, "text": "быстрота"}, {"id": 2, "text": "сила"}, {"id": 3, "text": "ловкость"}, {"id": 4, "text": "выносливость"}], "correct_answer": "2"}, {"num": 8, "text": "Задачами физической подготовки являются:", "options": [{"id": 1, "text": "развитие физических качеств у военнослужащих"}, {"id": 2, "text": "формирование и совершенствование у военнослужащих военно-прикладных двигательных навыков"}, {"id": 3, "text": "получение теоретических знаний и формирование методических умений военнослужащих для проведения мероприятий физической подготовки"}, {"id": 4, "text": "развитие и совершенствование физических качеств (выносливости, силы, быстроты и ловкости) с учетом возрастных особенностей"}], "correct_answer": "1,2,3"}, {"num": 9, "text": "Принцип прикладности выражает:", "options": [{"id": 1, "text": "основное предназначение физической подготовки войск – готовить военнослужащих к успешному выполнению учебно-боевых и боевых задач"}, {"id": 2, "text": "воспитания военнослужащих – созданием конкретных боевых ситуаций"}, {"id": 3, "text": "развитие военнослужащих – акцентированием совершенствования особо важных специальных качеств"}], "correct_answer": "1"}, {"num": 10, "text": "В системе управления физической подготовкой военнослужащих реализация принципа прикладности достигается:", "options": [{"id": 1, "text": "в руководстве – принятием глубоко продуманных и всесторонне обоснованных решений"}, {"id": 2, "text": "в организации – более полным учётом периодизации военно-профессиональной деятельности военнослужащих различных воинских специальностей; подчинением содержания занятий по физической подготовке содержанию занятий по тактической (тактико-специальной) подготовке"}, {"id": 3, "text": "в обеспечении – строительством и оборудованием таких спортивных объектов и мест для занятий физической подготовкой и спортом, которые позволяют в массовом порядке выполнять различные военно-прикладные упражнения из различных разделов физической подготовки"}, {"id": 4, "text": "в проведении – преимущественным проведением комплексных занятий и тренировок"}], "correct_answer": "4"}]}, "33": {"variant": 33, "questions": [{"num": 1, "text": "Чем определяется уровень физической подготовленности", "options": [{"id": 1, "text": "уровнем устойчивости организма к воздействию неблагоприятных факторов военно-профессиональной деятельности и окружающей среды"}, {"id": 2, "text": "степенью готовности военнослужащих к перенесению экстремальных физических и психических нагрузок в период подготовки и ведения боевых действий"}, {"id": 3, "text": "степенью развития физических качеств, сформированности военно-прикладных двигательных навыков"}, {"id": 4, "text": "достигнутым уровнем теоретических знаний и методических умений"}], "correct_answer": "3,4"}, {"num": 2, "text": "Кто является специалистам физической подготовки (ст.13)?", "options": [{"id": 1, "text": "военнослужащие, имеющие образование в области физической культуры и спорта"}, {"id": 2, "text": "лица гражданского персонала ВС РФ, имеющих образование в области физической культуры"}, {"id": 3, "text": "военнослужащие имеющую квалификацию и находящиеся на должностях, подлежащих замещению специалистами физической подготовки"}], "correct_answer": "3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «сила»?", "options": [{"id": 1, "text": "подтягивание на перекладине"}, {"id": 2, "text": "восхождение на платформу (тумбу)"}, {"id": 3, "text": "бег на 60 м с грузом"}, {"id": 4, "text": "толчок двух гирь"}, {"id": 5, "text": "подъем переворотом на перекладине"}, {"id": 6, "text": "комбинированное силовое упражнение на перекладине"}], "correct_answer": "1,4,5,6"}, {"num": 4, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «быстрота»?", "options": [{"id": 1, "text": "подтягивание на перекладине"}, {"id": 2, "text": "челночный бег 10х10 м"}, {"id": 3, "text": "бег на 100м"}, {"id": 4, "text": "бег на 1 км"}, {"id": 5, "text": "бег на 800 м с оружием"}], "correct_answer": "2,3"}, {"num": 5, "text": "Как называется общефизическое упражнение №14.", "options": [{"id": 1, "text": "Комплексное упражнение"}, {"id": 2, "text": "Жим штанги лежа"}, {"id": 3, "text": "Приседание со штангой"}, {"id": 4, "text": "Становая тяга со штангой"}], "correct_answer": "2"}, {"num": 6, "text": "По какой команде выполняется упражнение №14.", "options": [{"id": 1, "text": "«ВПЕРЕД»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}, {"id": 4, "text": "«ВНИМАНИЕ»,  «МАРШ»."}], "correct_answer": "2"}, {"num": 7, "text": "Как называется  общефизическое упражнение №2.", "options": [{"id": 1, "text": "отжимание"}, {"id": 2, "text": "подъем силой на перекладине"}, {"id": 3, "text": "наклоны туловища вперед согнув ноги"}, {"id": 4, "text": "вис на перекладине"}, {"id": 5, "text": "наклоны  туловища вперед"}], "correct_answer": "5"}, {"num": 8, "text": "Физические упражнения – это:", "options": [{"id": 1, "text": "движения, выполняемые с целью улучшения физического состояния военнослужащих"}, {"id": 2, "text": "движения на снарядах"}, {"id": 3, "text": "движения, выполняемые с целью поднятия физического здоровья военнослужащих"}], "correct_answer": "1"}, {"num": 9, "text": "Техникой физических упражнений называются:", "options": [{"id": 1, "text": "Способы выполнения упражнений, обеспечивающие их мощную эффективность"}, {"id": 2, "text": "Способы выполнения упражнений, обеспечивающие их наибольшую эффективность"}, {"id": 3, "text": "Способы выполнения упражнений, обеспечивающие их качественную эффективность"}], "correct_answer": "2"}, {"num": 10, "text": "Физическая культура это:", "options": [{"id": 1, "text": "сфера социально-культурной деятельности как совокупность видов спорта, сложившаяся в форме соревнований и специальной практики подготовки человека к ним"}, {"id": 2, "text": "процесс, направленный на воспитание личности, развитие физических возможностей человека, приобретение им умений и знаний в области физической культуры и спорта в целях формирования всесторонне развитого и физически здорового человека с высоким уровнем физической культуры"}, {"id": 3, "text": "часть культуры, представляющая собой совокупность ценностей, норм и знаний, создаваемых и используемых обществом в целях физического и интеллектуального развития способностей человека, совершенствования его двигательной активности и формирования здорового образа жизни, социальной адаптации путем физического воспитания, физической подготовки и физического развития"}], "correct_answer": "3"}]}, "34": {"variant": 34, "questions": [{"num": 1, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «выносливость»?", "options": [{"id": 1, "text": "марш-бросок на 5 км"}, {"id": 2, "text": "бег на 800 м с оружием"}, {"id": 3, "text": "плавание на 500 м вольным стилем"}, {"id": 4, "text": "лыжная гонка на 5 км"}, {"id": 5, "text": "комплексное упражнение на ловкость"}], "correct_answer": "3,4"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «ловкость»?", "options": [{"id": 1, "text": "комплексное упражнение на ловкость"}, {"id": 2, "text": "передвижение по узкой опоре"}, {"id": 3, "text": "комбинированное упражнение на перекладине"}, {"id": 4, "text": "марш-бросок на 5 км"}, {"id": 5, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «преодоление препятствий»?", "options": [{"id": 1, "text": "общее контрольное упражнение на единой полосе препятствий"}, {"id": 2, "text": "специальное контрольное упражнение для военнослужащих горных подразделений"}, {"id": 3, "text": "марш-бросок на 5 км"}, {"id": 4, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2"}, {"num": 4, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «ускоренное передвижение»?", "options": [{"id": 1, "text": "бег на 60 м с грузом"}, {"id": 2, "text": "бег в экипировке с автоматом"}, {"id": 3, "text": "челночный бег 10х10"}, {"id": 4, "text": "бег на 1 км"}, {"id": 5, "text": "бег на 5 км"}, {"id": 6, "text": "бег на 800 м с оружием"}], "correct_answer": "1,2,6"}, {"num": 5, "text": "По какой команде выполняется упражнение №2.", "options": [{"id": 1, "text": "«ВПЕРЕД»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«К выполнению упражнения ПРИСТУПИТЬ»"}, {"id": 4, "text": "«ВНИМАНИЕ»,  «МАРШ»."}], "correct_answer": "3"}, {"num": 6, "text": "Назовите номер упражнения – Наклоны туловища вперед.", "options": [{"id": 1, "text": "№3"}, {"id": 2, "text": "№67"}, {"id": 3, "text": "№7"}, {"id": 4, "text": "№2"}], "correct_answer": "2"}, {"num": 7, "text": "На какое физическое качество направленно упражнение №2.", "options": [{"id": 1, "text": "выносливость"}, {"id": 2, "text": "быстрота"}, {"id": 3, "text": "сила"}, {"id": 4, "text": "ловкость"}], "correct_answer": "3"}, {"num": 8, "text": "Из каких оценок складывается оценка курсанта образовательной организации по учебной дисциплине «Физическая подготовка»?", "options": [{"id": 1, "text": "оценки по теоретической подготовленности"}, {"id": 2, "text": "оценки по методической подготовленности"}, {"id": 3, "text": "оценки уровень физической подготовленности"}, {"id": 4, "text": "оценки по практической подготовленности"}], "correct_answer": "1,2,3"}, {"num": 9, "text": "Какое количество баллов необходимо набрать курсанту 3 курса в  пяти упражнениях, чтобы получить оценку «отлично» за уровень физической подготовленности?", "options": [{"id": 1, "text": "360"}, {"id": 2, "text": "350"}, {"id": 3, "text": "380"}, {"id": 4, "text": "370"}], "correct_answer": "1"}, {"num": 10, "text": "Какой нормативно-правовой документ устанавливает правовые, организационные, экономические и социальные основы деятельности в области физической культуры и спорта в РФ?", "options": [{"id": 1, "text": "ФЗ от 04.12.2007 №329-ФЗ (ред. от 24.06.2023) «О физической культуре и спорте в РФ»"}, {"id": 2, "text": "Приказ МО РФ от 20.04.2023 №230 «Об утверждении Наставления по физической подготовке в ВС РФ»"}], "correct_answer": "1"}]}, "35": {"variant": 35, "questions": [{"num": 1, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «рукопашный бой»?", "options": [{"id": 1, "text": "комплекс приемов и действий рукопашного боя"}, {"id": 2, "text": "комплекс рукопашного боя на 8 счетов без оружия"}, {"id": 3, "text": "комплекс рукопашного боя начальный (РБ-Н)"}, {"id": 4, "text": "комплекс рукопашного боя с оружием на 8 счетов"}], "correct_answer": "1"}, {"num": 2, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «военно-прикладное плавание»?", "options": [{"id": 1, "text": "плавание в обмундировании с оружием на 50 м"}, {"id": 2, "text": "плавание в обмундировании с оружием на 100 м"}, {"id": 3, "text": "ныряние в форме"}, {"id": 4, "text": "ныряние в длину и глубину"}, {"id": 5, "text": "плавание на 500 м вольным стилем"}, {"id": 6, "text": "плавание на 100 м вольным стилем"}], "correct_answer": "1,2,3"}, {"num": 3, "text": "Какие физические упражнения, составляют основу учебно-тренировочного занятия по теме «специальные приемы и действия»?", "options": [{"id": 1, "text": "комплексное упражнение «квадрат»"}, {"id": 2, "text": "бег с преодолением полосы препятствий"}, {"id": 3, "text": "метание гранаты на точность"}, {"id": 4, "text": "комплекс приемов и действий рукопашного боя"}, {"id": 5, "text": "плавание в обмундировании на 100 м"}], "correct_answer": "1,2,3"}, {"num": 4, "text": "Что включат в себя организация физической подготовки?", "options": [{"id": 1, "text": "планирование и проведение мероприятий физической подготовки"}, {"id": 2, "text": "постановку задач исполнителям, организацию взаимодействия и всестороннее обеспечение их действий"}, {"id": 3, "text": "ведение учета физической подготовки"}, {"id": 4, "text": "контроль за ходом выполнения поставленных задач"}, {"id": 5, "text": "медицинское обеспечение"}, {"id": 6, "text": "подготовку должностных лиц, осуществляющих проведение физической подготовки с военнослужащими"}, {"id": 7, "text": "представление отчетности"}, {"id": 8, "text": "анализ результатов и подведение итогов"}, {"id": 9, "text": "осуществление контроля проведения мероприятий физической подготовки в подразделениях и оказание помощи руководителям занятий по физической подготовке"}], "correct_answer": "1,3,6,9"}, {"num": 5, "text": "Назовите номер упражнения – Прыжки на скакалке", "options": [{"id": 1, "text": "№19"}, {"id": 2, "text": "№33"}, {"id": 3, "text": "№31"}, {"id": 4, "text": "№ 41"}], "correct_answer": "3"}, {"num": 6, "text": "Как называется упражнение №31.", "options": [{"id": 1, "text": "восхождение на платформу (тумбу)"}, {"id": 2, "text": "комбинированное упражнение на брусьях"}, {"id": 3, "text": "прыжки со скакалкой"}, {"id": 4, "text": "комплексное упражнение на ловкость"}], "correct_answer": "3"}, {"num": 7, "text": "По какой команде выполняется упражнение №31.", "options": [{"id": 1, "text": "«НА СТАРТ»,  «ВНИМАНИЕ» «МАРШ»"}, {"id": 2, "text": "«К СНАРЯДУ»"}, {"id": 3, "text": "«ВПЕРЕД»"}, {"id": 4, "text": "«МАРШ»"}], "correct_answer": "3"}, {"num": 8, "text": "Циклические упражнения представляют собой:", "options": [{"id": 1, "text": "цепь периодически повторяющихся действий, при выполнении которых тело человека и его части каждый раз оказываются в разных исходных положениях (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}, {"id": 2, "text": "двигательные действия, при выполнении которых отсутствует смежная повторяемость стандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}, {"id": 3, "text": "цепь периодически повторяющихся движений или действий, при выполнении которых тело человека и его части каждый раз оказываются в одном и том же исходном положении (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}], "correct_answer": "2"}, {"num": 9, "text": "Ациклические упражнения –  это", "options": [{"id": 1, "text": "цепь периодически повторяющихся движений или действий, при выполнении которых тело человека и его части каждый раз оказываются в одном и том же исходном положении (бег, ходьба, передвижение на лыжах, плавание и т.п.)"}, {"id": 2, "text": "такие двигательные действия, при выполнении которых отсутствует смежная повторяемость стандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}, {"id": 3, "text": "такие двигательные действия, при выполнении которых отсутствует нужная повторяемость нестандартных циклов движений (поднимание тяжестей, упражнения на гимнастических снарядах, приемы рукопашного боя, преодоление препятствий и т.п.)"}], "correct_answer": "2"}, {"num": 10, "text": "Назовите какое минимальное количество баллов, необходимо набрать в одном упражнении курсанту 3 курса , чтобы не получить оценку «неудовлетворительно» за уровень физической подготовленности?", "options": [{"id": 1, "text": "38"}, {"id": 2, "text": "36"}, {"id": 3, "text": "34"}, {"id": 4, "text": "32"}], "correct_answer": "1"}]}};
+
+// Progress stored in localStorage
+let progress = JSON.parse(localStorage.getItem('fp_progress') || '{}');
+// progress[variantNum] = { score: X, total: Y, done: [q_nums passed] }
+
+let currentVariant = null;
+let currentQuestions = [];
+let currentQIdx = 0;
+let userAnswers = [];  // For current session
+let selectedOptions = new Set();
+let matchingAnswers = {};
+
+// ── RENDER HOME ──
+function renderHome() {
+  const grid = document.getElementById('ticketsGrid');
+  grid.innerHTML = '';
+  let doneCount = 0;
+  let bestPct = 0;
+
+  for (let i = 1; i <= 35; i++) {
+    const btn = document.createElement('div');
+    btn.className = 'ticket-btn';
+    const p = progress[i];
+    let pct = 0;
+    if (p && p.done) {
+      pct = Math.round((p.score / p.total) * 100);
+      if (p.done === true) {
+        btn.classList.add('done');
+        doneCount++;
+        if (pct > bestPct) bestPct = pct;
+      } else {
+        btn.classList.add('partial');
+      }
+    }
+    btn.innerHTML = `
+      <div class="t-num">${i}</div>
+      <div class="t-label">${p && p.done === true ? pct + '%' : 'Вариант'}</div>
+      ${p && p.done === true ? `<div class="progress-bar" style="width:${pct}%"></div>` : ''}
+    `;
+    btn.onclick = () => startVariant(i);
+    grid.appendChild(btn);
+  }
+
+  document.getElementById('statDone').textContent = doneCount;
+  document.getElementById('statBestPct').textContent = doneCount > 0 ? bestPct + '%' : '—';
+}
+
+// ── START VARIANT ──
+function startVariant(variantNum) {
+  currentVariant = variantNum;
+  currentQuestions = EXAM_DATA[String(variantNum)].questions;
+  currentQIdx = 0;
+  userAnswers = [];
+
+  document.getElementById('examTitle').textContent = 'Вариант ' + variantNum;
+  document.getElementById('backBtn').style.display = 'block';
+
+  showScreen('examScreen');
+  renderQuestion();
+}
+
+function retryVariant() {
+  startVariant(currentVariant);
+}
+
+// ── RENDER QUESTION ──
+function renderQuestion() {
+  const q = currentQuestions[currentQIdx];
+  const total = currentQuestions.length;
+  const pct = Math.round((currentQIdx / total) * 100);
+
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = currentQIdx + ' / ' + total;
+  document.getElementById('questionBadge').textContent = 'ВОПРОС ' + q.num;
+  document.getElementById('questionText').textContent = q.text;
+
+  // Hide feedback
+  const fb = document.getElementById('feedbackBox');
+  fb.style.display = 'none';
+  fb.className = 'answer-feedback';
+
+  // Reset buttons
+  document.getElementById('submitBtn').style.display = 'inline-block';
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('nextBtn').style.display = 'none';
+  document.getElementById('finishBtn').style.display = 'none';
+
+  selectedOptions = new Set();
+  matchingAnswers = {};
+
+  const correctAns = q.correct_answer;
+  const isMatching = correctAns.includes('-') && correctAns.includes(';');
+
+  const correctIds = parseCorrectAnswer(correctAns);
+  const isTextAnswer = !isMatching && correctIds.length === 0;
+
+  // Multi-hint
+  const multiHint = document.getElementById('multiHint');
+  if (isMatching) {
+    multiHint.style.display = 'block';
+    multiHint.textContent = '🔗 Вопрос на соответствие — выберите пару для каждого пункта';
+  } else if (isTextAnswer) {
+    multiHint.style.display = 'block';
+    multiHint.textContent = '💡 Выберите любой вариант или нажмите «Ответить» — правильный ответ будет показан';
+  } else if (correctIds.length > 1) {
+    multiHint.style.display = 'block';
+    multiHint.textContent = '⚠️ В этом вопросе несколько правильных ответов (' + correctIds.length + ')';
+  } else {
+    multiHint.style.display = 'none';
+  }
+
+  // Matching vs standard
+  const matchArea = document.getElementById('matchingArea');
+  const optsList = document.getElementById('optionsList');
+
+  if (isMatching) {
+    optsList.style.display = 'none';
+    matchArea.style.display = 'block';
+    renderMatchingQuestion(q, correctAns);
+  } else {
+    optsList.style.display = 'flex';
+    matchArea.style.display = 'none';
+    renderStandardOptions(q.options);
+    if (isTextAnswer) {
+      // Enable submit without selection for text-answer questions
+      document.getElementById('submitBtn').disabled = false;
+    }
+  }
+}
+
+function renderStandardOptions(options) {
+  const list = document.getElementById('optionsList');
+  list.innerHTML = '';
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.dataset.id = opt.id;
+    btn.innerHTML = `<span class="opt-num">${opt.id}</span><span>${opt.text}</span>`;
+    btn.onclick = () => toggleOption(opt.id, btn);
+    list.appendChild(btn);
+  });
+}
+
+function toggleOption(id, btn) {
+  if (btn.disabled) return;
+  if (selectedOptions.has(id)) {
+    selectedOptions.delete(id);
+    btn.classList.remove('selected');
+  } else {
+    selectedOptions.add(id);
+    btn.classList.add('selected');
+  }
+  document.getElementById('submitBtn').disabled = selectedOptions.size === 0;
+}
+
+function renderMatchingQuestion(q, correctAns) {
+  const container = document.getElementById('matchingOptions');
+  container.innerHTML = '';
+
+  // Parse matching pairs format: "1-3; 2-6; 3-9; ..."
+  const pairs = parseMatchingPairs(correctAns);
+  const leftIds = pairs.map(p => p.left);
+  const rightIds = pairs.map(p => p.right);
+  const allIds = q.options.map(o => o.id);
+
+  q.options.forEach(opt => {
+    if (!leftIds.includes(opt.id)) return;
+    const row = document.createElement('div');
+    row.className = 'matching-row';
+
+    const numEl = document.createElement('div');
+    numEl.className = 'match-num';
+    numEl.textContent = opt.id;
+
+    const leftText = document.createElement('span');
+    leftText.style.flex = '1';
+    leftText.style.fontSize = '13px';
+    leftText.style.color = 'var(--text)';
+    leftText.textContent = opt.text;
+
+    const arrow = document.createElement('span');
+    arrow.textContent = '→';
+    arrow.style.color = 'var(--text2)';
+
+    const sel = document.createElement('select');
+    sel.className = 'match-select';
+    sel.dataset.left = opt.id;
+    const defOpt = document.createElement('option');
+    defOpt.value = '';
+    defOpt.textContent = '— выберите —';
+    sel.appendChild(defOpt);
+    allIds.forEach(rid => {
+      const rightOpt = q.options.find(o => o.id === rid);
+      if (!rightOpt) return;
+      const o = document.createElement('option');
+      o.value = rid;
+      o.textContent = rid + '. ' + rightOpt.text;
+      sel.appendChild(o);
+    });
+    sel.addEventListener('change', () => {
+      matchingAnswers[opt.id] = parseInt(sel.value);
+      const allPairs = leftIds.every(lid => matchingAnswers[lid]);
+      document.getElementById('submitBtn').disabled = !allPairs;
+    });
+
+    row.appendChild(numEl);
+    row.appendChild(leftText);
+    row.appendChild(arrow);
+    row.appendChild(sel);
+    container.appendChild(row);
+  });
+}
+
+function parseMatchingPairs(ans) {
+  const pairs = [];
+  // Split by ; or newlines
+  const parts = ans.replace(/\n/g, ';').split(/[;\n]/).map(s => s.trim()).filter(s => s);
+  parts.forEach(p => {
+    const m = p.match(/^(\d+)-(\d+)$/);
+    if (m) pairs.push({ left: parseInt(m[1]), right: parseInt(m[2]) });
+  });
+  return pairs;
+}
+
+function parseCorrectAnswer(ans) {
+  return ans.split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+}
+
+// ── SUBMIT ──
+function submitAnswer() {
+  const q = currentQuestions[currentQIdx];
+  const correctAns = q.correct_answer;
+  const isMatching = correctAns.includes('-') && correctAns.includes(';');
+
+  document.getElementById('submitBtn').style.display = 'none';
+  const isLast = currentQIdx === currentQuestions.length - 1;
+  document.getElementById(isLast ? 'finishBtn' : 'nextBtn').style.display = 'inline-block';
+
+  // Disable options
+  document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+  document.querySelectorAll('.match-select').forEach(s => s.disabled = true);
+
+  let isCorrect = false;
+  const fb = document.getElementById('feedbackBox');
+  fb.style.display = 'block';
+
+  if (isMatching) {
+    const correctPairs = parseMatchingPairs(correctAns);
+    isCorrect = correctPairs.every(p => matchingAnswers[p.left] === p.right);
+
+    if (isCorrect) {
+      fb.className = 'answer-feedback correct-fb';
+      fb.innerHTML = `<div class="fb-title">✅ Верно!</div><div class="fb-detail">Все соответствия установлены правильно.</div>`;
+    } else {
+      fb.className = 'answer-feedback wrong-fb';
+      let correctLines = correctPairs.map(p => {
+        const lt = q.options.find(o => o.id === p.left);
+        const rt = q.options.find(o => o.id === p.right);
+        return `<b>${p.left}.</b> ${lt ? lt.text : p.left} → <b>${p.right}.</b> ${rt ? rt.text : p.right}`;
+      }).join('<br>');
+      fb.innerHTML = `<div class="fb-title">❌ Неверно</div><div class="fb-detail">Правильное соответствие:<div class="correct-text">${correctLines}</div></div>`;
+    }
+    userAnswers.push({ qNum: q.num, qText: q.text, correct: isCorrect });
+  } else {
+    const correctIds = parseCorrectAnswer(correctAns);
+    const isTextAnswer = correctIds.length === 0;
+
+    if (isTextAnswer) {
+      // Text-based answer (e.g. "Гранатой огонь")
+      fb.className = 'answer-feedback wrong-fb';
+      fb.innerHTML = `<div class="fb-title">📋 Правильный ответ</div><div class="fb-detail">Ответ на этот вопрос не выбирается из списка.<div class="correct-text"><b>${correctAns}</b></div></div>`;
+      userAnswers.push({ qNum: q.num, qText: q.text, correct: false });
+      // Don't try to match
+      document.querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('selected'));
+    } else {
+      const userIds = Array.from(selectedOptions).sort((a,b) => a-b);
+      const correctSorted = [...correctIds].sort((a,b) => a-b);
+      isCorrect = JSON.stringify(userIds) === JSON.stringify(correctSorted);
+
+      // Mark options
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        const id = parseInt(btn.dataset.id);
+        const isUserSel = selectedOptions.has(id);
+        const isCorrectOpt = correctIds.includes(id);
+        if (isUserSel && isCorrectOpt) btn.classList.add('correct');
+        else if (isUserSel && !isCorrectOpt) btn.classList.add('wrong');
+        else if (!isUserSel && isCorrectOpt) btn.classList.add('correct');
+      });
+
+      if (isCorrect) {
+        fb.className = 'answer-feedback correct-fb';
+        fb.innerHTML = `<div class="fb-title">✅ Верно!</div>`;
+      } else {
+        const correctTexts = correctIds.map(id => {
+          const opt = q.options.find(o => o.id === id);
+          return `<b>${id}.</b> ${opt ? opt.text : id}`;
+        }).join('<br>');
+        fb.className = 'answer-feedback wrong-fb';
+        fb.innerHTML = `<div class="fb-title">❌ Неверно</div><div class="fb-detail">Правильный ответ:<div class="correct-text">${correctTexts}</div></div>`;
+      }
+      userAnswers.push({ qNum: q.num, qText: q.text, correct: isCorrect });
+    }
+  }
+}
+
+// ── NEXT QUESTION ──
+function nextQuestion() {
+  currentQIdx++;
+  renderQuestion();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// ── SHOW RESULTS ──
+function showResults() {
+  const total = currentQuestions.length;
+  const score = userAnswers.filter(a => a.correct).length;
+  const pct = Math.round((score / total) * 100);
+
+  // Save progress
+  progress[currentVariant] = { score, total, done: true };
+  localStorage.setItem('fp_progress', JSON.stringify(progress));
+
+  // Score circle
+  const circle = document.getElementById('scoreCircle');
+  circle.className = 'score-circle';
+  if (pct >= 90) circle.classList.add('excellent');
+  else if (pct >= 70) circle.classList.add('good');
+  else if (pct >= 50) circle.classList.add('satisf');
+  else circle.classList.add('fail');
+
+  document.getElementById('scorePct').textContent = pct + '%';
+  document.getElementById('scoreRatio').textContent = score + '/' + total;
+
+  const grades = {excellent: 'Отлично! 🏆', good: 'Хорошо! 👍', satisf: 'Удовлетворительно', fail: 'Неудовлетворительно'};
+  const cls = pct >= 90 ? 'excellent' : pct >= 70 ? 'good' : pct >= 50 ? 'satisf' : 'fail';
+  document.getElementById('resultsTitle').textContent = grades[cls];
+  document.getElementById('resultsSubtitle').textContent = `Вариант ${currentVariant} · Правильных ответов: ${score} из ${total}`;
+
+  // Breakdown
+  const bd = document.getElementById('resultsBreakdown');
+  bd.innerHTML = userAnswers.map((a, i) => `
+    <div class="breakdown-item ${a.correct ? 'ok' : 'fail'}">
+      <span class="q-num">В${i+1}</span>
+      <span class="q-text">${a.qText}</span>
+      <span class="q-result">${a.correct ? '✓' : '✗'}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('backBtn').style.display = 'block';
+  showScreen('resultsScreen');
+  renderHome();
+}
+
+function goHome() {
+  document.getElementById('backBtn').style.display = 'none';
+  showScreen('homeScreen');
+  renderHome();
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top: 0});
+}
+
+// Init
+renderHome();
+</script>
+</body>
+</html>
